@@ -30,8 +30,18 @@ pattern_middle = [[1, 1, 1, 1, 1, 1],
                   [1, 1, 1, 1, 1, 1]
                   ]
 
+pattern_test = [[1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                [1, 1, 1, 0, 0, 1, 0, 0, 1, 1],
+                [1, 1, 1, 0, 0, 1, 0, 0, 1, 1],
+                [1, 1, 0, 0, 0, 0, 1, 1, 1, 1],
+                [1, 0, 1, 0, 0, 0, 1, 1, 1, 1],
+                [1, 1, 1, 0, 0, 0, 1, 0, 0, 1],
+                [1, 1, 1, 1, 1, 1, 1, 0, 0, 1]]
+
 
 from PIL import Image
+#from creating_patterns import filled_image
 
 def matrix_to_image(matrix, filename):
     image = Image.new('1', (len(matrix[0]), len(matrix)))
@@ -48,3 +58,4 @@ def matrix_to_image(matrix, filename):
 matrix_to_image(pattern_easy, 'pattern_easy.png')
 matrix_to_image(pattern_complex, 'pattern_complex.png')
 matrix_to_image(pattern_middle, 'pattern_middle.png')
+#matrix_to_image(filled_image, 'pattern_test_300_300.png')

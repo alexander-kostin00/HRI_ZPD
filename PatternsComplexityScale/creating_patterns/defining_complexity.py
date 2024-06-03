@@ -2,7 +2,6 @@
 Author: Oleksandr Kostin
 """
 
-
 from patterns import pattern_easy, pattern_complex, pattern_middle
 
 def amount_lit(pattern):
@@ -57,26 +56,21 @@ class PatternComplexity:
     def get_surrounding(self, j, i, iteration):
         if iteration == 0:
             surrounding = [
-
-                #self.xy(j - 1, i - 1), self.xy(j, i - 1), self.xy(j + 1, i - 1),
-                #self.xy(j + 1, i), self.xy(j + 1, i + 1), self.xy(j, i + 1),
-                #self.xy(j - 1, i + 1), self.xy(j - 1, i)
-
                 #to write if conditions for at first 4 combinations
                 self.xy(j, i - 1), self.xy(j + 1, i), self.xy(j, i + 1), self.xy(j - 1, i)
             ]
-        #elif iteration == 1:
-            #surrounding = [
-           #     self.xy(j, i - 1),  self.xy(j, i + 1), self.xy(j + 1, i), self.xy(j - 1, i)
-          #  ]
-        #elif iteration == 2:
-         #   surrounding = [
-             #   self.xy(j - 1, i), self.xy(j, i - 1), self.xy(j + 1, i), self.xy(j, i + 1)
-            #]
-        #elif iteration == 3:
-         #   surrounding = [
-          #       self.xy(j + 1, i), self.xy(j, i + 1), self.xy(j - 1, i), self.xy(j, i - 1)
-           # ]
+        elif iteration == 1:
+            surrounding = [
+                self.xy(j, i - 1),  self.xy(j, i + 1), self.xy(j + 1, i), self.xy(j - 1, i)
+            ]
+        elif iteration == 2:
+            surrounding = [
+                self.xy(j - 1, i), self.xy(j, i - 1), self.xy(j + 1, i), self.xy(j, i + 1)
+            ]
+        elif iteration == 3:
+            surrounding = [
+                 self.xy(j + 1, i), self.xy(j, i + 1), self.xy(j - 1, i), self.xy(j, i - 1)
+            ]
 
         return [surr for surr in surrounding if surr[0] != -1]
 
@@ -92,25 +86,24 @@ class PatternComplexity:
                 counter += self.discover_pattern(counter, h[1], h[0], iteration)
         return counter
 
-    def define_complexity(self):
+    def define_complexity(self, scaling_factor):
         for i in range(self.rows):
             for j in range(self.columns):
                 if self.pattern[i][j] == 0:
-                    #counters = []
+                    counters = []
                     for iteration in range(4):
                         counter_overload = self.discover_pattern(0, i, j, iteration)
                         counter = find_largest_component(counter_overload)
-                        #counters.append(counter)
+                        counters.append(counter)
 
-                    #counter = sum(counters)/len(counters)
-                        self.unlit_areas.append(counter)
+                    counter = max(counters)
+                    self.unlit_areas.append(counter)
         self.unlit_areas = filter_list(self.unlit_areas)
 
         self.diff_sized_unlit_areas = unique_sizes(self.unlit_areas)
 
         amount_unlit_areas = len(self.unlit_areas)
         amount_diff_sized_unlit_areas = len(self.diff_sized_unlit_areas)
-        scaling_factor = 0.5
 
         self.complexity = amount_unlit_areas + scaling_factor * amount_diff_sized_unlit_areas
 
@@ -119,7 +112,10 @@ class PatternComplexity:
 
 def main(pattern):
     pattern_complexity = PatternComplexity(pattern)
-    complexity_level = pattern_complexity.define_complexity()
+
+    scaling_factor = 1
+
+    complexity_level = pattern_complexity.define_complexity(scaling_factor)
 
     print('All unlit areas: ' + str(pattern_complexity.unlit_areas))
 
