@@ -3,7 +3,7 @@ Author: Oleksandr Kostin
 """
 
 from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox
-from defining_complexity import PatternComplexity
+#from defining_complexity import PatternComplexity
 from PIL import Image
 import random
 import math
@@ -13,13 +13,12 @@ sys.setrecursionlimit(50000)  # Increase the recursion limit to handle deep recu
 
 
 class CreatingPatterns:
-    def __init__(self, rows, columns, complexity_level, scaling_factor, valid_compinations_precise):
+    def __init__(self, rows, columns, complexity_level, scaling_factor):
         # Initialize class attributes
         self.rows = rows
         self.columns = columns
         self.complexity_level = complexity_level
         self.scaling_factor = scaling_factor
-        self.precise = valid_compinations_precise
 
     # Create a matrix filled with 1s (lit image)
     def create_lit_image(self, columns, rows):
@@ -276,8 +275,8 @@ class PatternApp(QWidget):
             rows = int(self.rows_input.text())
             output_path = self.output_path_input.text()
 
-            creating_patterns = CreatingPatterns(rows, columns, complexity_level, scaling_factor, True)
-            rand_comb = creating_patterns.find_valid_combinations(complexity_level, scaling_factor, True)
+            creating_patterns = CreatingPatterns(rows, columns, complexity_level, scaling_factor)
+            rand_comb = creating_patterns.find_valid_combinations(complexity_level, scaling_factor, False)
 
             if not rand_comb:
                 QMessageBox.critical(self, 'Error', 'No valid combinations found.')

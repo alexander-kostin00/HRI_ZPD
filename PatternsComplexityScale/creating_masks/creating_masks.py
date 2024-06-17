@@ -1,7 +1,8 @@
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox
 from PIL import Image
 import numpy as np
 import random
+import time
 import math
 import cv2
 import sys
@@ -10,81 +11,81 @@ import sys
 
 class CreatingMasks:
     def __init__(self, path_to_pattern, visible, pieces):
-        image = cv2.imread(path_to_pattern, cv2.IMREAD_GRAYSCALE)
+        image = cv2.imread(path_to_pattern)
 
         if image is None:
             print("Error: Could not open or find the image.")
             exit()
 
-        _, binary_image = cv2.threshold(image, 128, 255, cv2.THRESH_BINARY)
+        self.color_matrix = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        self.binary_matrix = np.where(binary_image == 255, 0, 1)
-
-        self.visible_area = visible*(len(self.binary_matrix)*len(self.binary_matrix[0]))
+        self.visible_area = visible * (self.color_matrix.shape[0] * self.color_matrix.shape[1])
         self.pieces = pieces
-        self.piece_area = int(self.visible_area/pieces)
-
-        self.visible_coord = []
-        print('Visible coordinates: ' + str(self.visible_coord))
-
+        self.piece_area = int(self.visible_area / pieces)
         self.boundaries = []
 
     def create_visible_areas(self):
         side_length = int(math.sqrt(self.piece_area))
-        for i in range(self.pieces):
-            available = False
-            while not available:
-                r_col = random.randint(0, len(self.binary_matrix[0]))
-                r_row = random.randint(0, len(self.binary_matrix))
+        time_limit = 5 * self.pieces
 
-                print('RANDOM START COORDINATES: ' + str(r_row) + ' ' + str(r_col))
+        while True:
+            self.boundaries.clear()
+            start_time = time.time()
 
-                available = self.check_region(r_row, r_col)
+            for i in range(self.pieces):
+                available = False
+                while not available:
+                    if time.time() - start_time > time_limit:
+                        print("Timeout: Restarting the process.")
+                        break
 
-                if available:
-                    self.boundaries.append([r_col, r_row, r_col + side_length-2, r_row + side_length-2])
+                    r_col = random.randint(0, self.color_matrix.shape[1] - 1)
+                    r_row = random.randint(0, self.color_matrix.shape[0] - 1)
+
+                    print('RANDOM START COORDINATES: ' + str(r_row) + ' ' + str(r_col))
+
+                    available = self.check_region(r_row, r_col, side_length)
+
+                    if available:
+                        self.boundaries.append([r_col, r_row, r_col + side_length - 1, r_row + side_length - 1])
+
+                if time.time() - start_time > time_limit:
+                    break
+
+            if time.time() - start_time <= time_limit:
+                break
+
         print(self.boundaries)
 
     def xy(self, row, column):
-        if column < 0 or row < 0 or column >= len(self.binary_matrix[0]) or row >= len(self.binary_matrix) or ([row, column] in self.visible_coord):
+        if column < 0 or row < 0 or column >= self.color_matrix.shape[1] or row >= self.color_matrix.shape[0]:
             return [-1, -1]
         for bound in self.boundaries:
             if (column >= bound[0] and column <= bound[2]) and (row >= bound[1] and row <= bound[3]):
                 return [-1, -1]
         return [row, column]
 
-    def check_region(self, start_row, start_column):
-        side_length = int(math.sqrt(self.piece_area))
-
+    def check_region(self, start_row, start_column, side_length):
         for i in range(0, side_length):
             for j in range(0, side_length):
                 point = self.xy(start_row + i, start_column + j)
-                #print(start_row + i, start_column + j)
                 if point[0] == -1:
                     return False
         return True
 
     def cover_image(self):
-        for i in range(len(self.binary_matrix)):
-            for j in range(len(self.binary_matrix[0])):
+        green_color = [0, 255, 0]  # RGB value for green
+        for i in range(self.color_matrix.shape[0]):
+            for j in range(self.color_matrix.shape[1]):
                 for bound in self.boundaries:
                     if (j >= bound[0] and j <= bound[2]) and (i >= bound[1] and i <= bound[3]):
                         break
                 else:
-                    self.binary_matrix[i, j] = 1
+                    self.color_matrix[i, j] = green_color  # Fill with green color
 
-
-def matrix_to_image(matrix, filename):
-    image = Image.new('1', (len(matrix[0]), len(matrix)))
-
-    pixels = image.load()
-
-    for i in range(image.size[1]):
-        for j in range(image.size[0]):
-            pixels[j, i] = 0 if matrix[i][j] == 1 else 1
-
-    image.save(filename)
-
+    def matrix_to_image(self, matrix, filename):
+        image = Image.fromarray(matrix.astype('uint8'), 'RGB')
+        image.save(filename)
 
 
 class MaskApp(QWidget):
@@ -148,13 +149,11 @@ class MaskApp(QWidget):
             creating_masks = CreatingMasks(input_path, visible, pieces)
             creating_masks.create_visible_areas()
             creating_masks.cover_image()
-            matrix_to_image(creating_masks.binary_matrix, output_path)
+            creating_masks.matrix_to_image(creating_masks.color_matrix, output_path)
 
             QMessageBox.information(self, 'Success', f'Mask generated and saved to {output_path}')
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
-
-
 
 
 def main():
@@ -167,18 +166,18 @@ def main():
     #pieces = 100   # Amount of rectangles into which the visible part of the picture is divided
 
     #creating_masks = CreatingMasks(path, visible, pieces)
-    #binary_matrix = creating_masks.binary_matrix
+    #color_matrix = creating_masks.color_matrix
 
-    #print(binary_matrix)
+    #print(color_matrix)
     #print()
-    #print('Hight: ' + str(len(binary_matrix)))
-    #print('Wigth: ' + str(len(binary_matrix[0])))
+    #print('Hight: ' + str(len(color_matrix)))
+    #print('Wigth: ' + str(len(color_matrix[0])))
     #print()
 
     #creating_masks.create_visible_areas()
     #creating_masks.cover_image()
 
-    #matrix_to_image(creating_masks.binary_matrix, 'patterns_covered/image6.png')
+    #matrix_to_image(creating_masks.color_matrix, 'patterns_covered/image6.png')
 
 
 
