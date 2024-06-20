@@ -1,3 +1,7 @@
+"""
+Author: Oleksandr Kostin
+"""
+
 from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton, QVBoxLayout
 from PyQt6.QtGui import QPixmap, QScreen, QFont
 from PyQt6.QtCore import QTimer, Qt

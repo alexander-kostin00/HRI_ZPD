@@ -2,9 +2,10 @@
 Author: Oleksandr Kostin
 """
 
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox
+from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox
 #from defining_complexity import PatternComplexity
 from PIL import Image
+import itertools
 import random
 import math
 import time
@@ -13,12 +14,15 @@ sys.setrecursionlimit(50000)  # Increase the recursion limit to handle deep recu
 
 
 class CreatingPatterns:
-    def __init__(self, rows, columns, complexity_level, scaling_factor):
+    def __init__(self, rows, columns, complexity_level, scaling_factor, merge):
         # Initialize class attributes
+        self.merge = merge
         self.rows = rows
         self.columns = columns
         self.complexity_level = complexity_level
         self.scaling_factor = scaling_factor
+        self.boundaries = []
+        self.merge_boundaries = []
 
     # Create a matrix filled with 1s (lit image)
     def create_lit_image(self, columns, rows):
@@ -109,78 +113,39 @@ class CreatingPatterns:
         return [r_row, r_col]
 
     def xy(self, row, column, image):
-        if column < 0 or row < 0 or column >= len(image[0]) or row >= len(image) or image[row][column] == 0:
+        if column < 0 or row < 0 or column >= len(image[0]) or row >= len(image):
             return [-1, -1]
+        for bound in self.boundaries:
+            if (column >= bound[0] and column <= bound[2]) and (row >= bound[1] and row <= bound[3]):
+                return [-1, -1]
         return [row, column]
 
     def check_region(self, start_row, start_column, area, image):
         side_length = int(math.sqrt(area))
-        #remaining = area - side_length**2
-        #relation = remaining/side_length
 
-        for i in range(-1, side_length + 1):
-            for j in range(-1, side_length + 1):
+        for i in range(side_length):
+            for j in range(side_length):
                 point = self.xy(start_row + i, start_column + j, image)
                 if point[0] == -1:
                     return False
 
-        #if remaining == 0:
-         #   for i in range(-1, side_length + 1):
-          #      for j in range(-1, side_length + 1):
-           #         point = self.xy(start_row + i, start_column + j, image)
-            #        if point[0] == -1:
-             #           return False
-        #elif relation <= 1:
-         #   for i in range(-1, side_length):
-          #      for j in range(-1, side_length + 1):
-           #         point = self.xy(start_row + i, start_column + j, image)
-            #        if point[0] == -1:
-             #           return False
-            #for i in range(side_length, side_length + 2):
-             #   for j in range(-1, remaining + 1):
-              #      point = self.xy(start_row + i, start_column + j, image)
-               #     if point[0] == -1:
-                #        return False
-        #elif relation > 1 and relation <= 2:
-         #   for i in range(-1, side_length + 1):
-          #      for j in range(-1, side_length + 1):
-           #         point = self.xy(start_row + i, start_column + j, image)
-            #        if point[0] == -1:
-             #           return False
-            #for i in range(side_length + 1, side_length + 3):
-             #   for j in range(-1, remaining - side_length + 1):
-              #      point = self.xy(start_row + i, start_column + j, image)
-               #     if point[0] == -1:
-                #        return False
         return True
 
     def make_unlit_region(self, start_row, start_column, area, image):
         side_length = int(math.sqrt(area))
-        #remaining = area - side_length ** 2
-        #relation = remaining / side_length
 
         for i in range(side_length):
             for j in range(side_length):
                 image[start_row + i][start_column + j] = 0
+        return image
 
-        #if remaining == 0:
-         #   for i in range(side_length):
-          #      for j in range(side_length):
-           #         image[start_row + i][start_column + j] = 0
-        #elif relation <= 1:
-         #   for i in range(side_length):
-          #      for j in range(side_length):
-           #         image[start_row + i][start_column + j] = 0
-            #for i in range(side_length, side_length + 1):
-             #   for j in range(remaining):
-              #      image[start_row + i][start_column + j] = 0
-        #elif relation > 1 and relation <= 2:
-         #   for i in range(side_length + 1):
-          #      for j in range(side_length):
-           #         image[start_row + i][start_column + j] = 0
-            #for i in range(side_length + 1, side_length + 2):
-             #   for j in range(remaining - side_length):
-              #      image[start_row + i][start_column + j] = 0
+    def make_unlit_region_merge(self, merge_boundaries, image):
+        for rect in merge_boundaries:
+            left, top, right, bottom = rect
+            for row in range(top, bottom+1):
+                for col in range(left, right+1):
+                    image[row][col] = 0
+
         return image
 
     def print_matrix(self, matrix):
@@ -188,8 +153,8 @@ class CreatingPatterns:
             print(" ".join(map(str, row)))
 
     def fill_image(self, image, unlit_areas):
-        image = image
         for area in unlit_areas:
+            side_length = int(math.sqrt(area))
             available = False
             while not available:
                 r_coordinates = self.random_coordinates(image)
@@ -198,9 +163,56 @@ class CreatingPatterns:
 
                 if available:
                     image = self.make_unlit_region(r_coordinates[0], r_coordinates[1], area, image)
-                    #print_matrix(image)
-                    #print()
+                    self.boundaries.append([r_coordinates[1], r_coordinates[0], r_coordinates[1] + side_length - 1, r_coordinates[0] + side_length - 1])
+                    print(self.boundaries)
+
+        if self.merge:
+            self.make_merge_boundaries()
+            image = self.make_unlit_region_merge(self.merge_boundaries, image)
+
         return image
+
+    def make_merge_boundaries(self):
+        comb = list(itertools.product(range(len(self.boundaries)), repeat=2))
+        unique_comb = [pair for pair in comb if pair[0] < pair[1]]
+        print(unique_comb)
+        combinations = [[self.boundaries[i], self.boundaries[j]] for i, j in unique_comb]
+        print(combinations)
+
+        for pair in combinations:
+            vec1, vec2 = pair
+            differences = [abs(vec1[i] - vec2[(i + 2) % 4]) for i in range(4)]
+            print(differences)
+
+            # Check if any differences are less than the threshold
+            for i, diff in enumerate(differences):
+                if diff < 50:
+                    if i % 2 == 0:  # Even indices (0 and 2)
+                        # Assign values to b and d
+                        b = max(vec1[1], vec2[1])
+                        d = min(vec1[3], vec2[3])
+                        if b >= d:
+                            continue
+                        # Assign values to a and c
+                        a = min(vec1[0], vec2[0])
+                        c = max(vec1[2], vec2[2])
+                        if a >= c:
+                            continue
+                    else:  # Odd indices (1 and 3)
+                        # Assign values to a and c
+                        a = min(vec1[2], vec2[2])
+                        c = max(vec1[0], vec2[0])
+                        if a >= c:
+                            continue
+                        # Assign values to b and d
+                        b = max(vec1[1], vec2[1])
+                        d = min(vec1[3], vec2[3])
+                        if b >= d:
+                            continue
+
+                    self.merge_boundaries.append([a, b, c, d])
+                    #break
+        print('MERGE boundaries: ' + str(self.merge_boundaries))
 
     def count_zeros_in_matrix(self, matrix):
         zero_count = 0  # Initialize a counter for zeros
@@ -256,6 +268,10 @@ class PatternApp(QWidget):
         self.browse_button.clicked.connect(self.browse_file)
         layout.addWidget(self.browse_button)
 
+        self.merge_checkbox = QCheckBox("merging", self)
+        self.merge_checkbox.setChecked(False)
+        layout.addWidget(self.merge_checkbox)
+
         self.generate_button = QPushButton('Generate Pattern', self)
         self.generate_button.clicked.connect(self.generate_pattern)
         layout.addWidget(self.generate_button)
@@ -274,8 +290,9 @@ class PatternApp(QWidget):
             columns = int(self.columns_input.text())
             rows = int(self.rows_input.text())
             output_path = self.output_path_input.text()
+            merge = self.merge_checkbox.isChecked()
 
-            creating_patterns = CreatingPatterns(rows, columns, complexity_level, scaling_factor)
+            creating_patterns = CreatingPatterns(rows, columns, complexity_level, scaling_factor, merge)
             rand_comb = creating_patterns.find_valid_combinations(complexity_level, scaling_factor, False)
 
             if not rand_comb:
@@ -301,44 +318,6 @@ def main():
     ex = PatternApp()
     ex.show()
     sys.exit(app.exec())
-
-    #complexity_level = 10
-    #scaling_factor = 0.2
-    #columns = 3000
-    #rows = 3000
-
-    #creating_patterns = CreatingPatterns(rows, columns, complexity_level, scaling_factor, True)
-
-    #rand_comb = creating_patterns.find_valid_combinations(complexity_level, scaling_factor, True)
-
-    #lit_image = creating_patterns.create_lit_image(columns, rows)
-    #target_sum = round((len(lit_image)*len(lit_image[0]))/3)
-
-    #unlit_areas = creating_patterns.generate_unlit_regions(rand_comb[0], rand_comb[1], lit_image, target_sum)
-
-    #print("Target sum:")
-    #print(target_sum)
-
-    #filled_image = creating_patterns.fill_image(lit_image, unlit_areas)
-
-    #print("Filled Image:")
-    #creating_patterns.print_matrix(filled_image)
-
-    #actual_sum = creating_patterns.count_zeros_in_matrix(filled_image)
-
-    #print("Actual sum:")
-    #print(actual_sum)
-
-    #pattern_complexity = PatternComplexity(filled_image)
-    #complexity_level = pattern_complexity.define_complexity(scaling_factor)
-
-    #print('All unlit areas: ' + str(pattern_complexity.unlit_areas))
-
-    #print('Only differently sized unlit areas: ' + str(pattern_complexity.diff_sized_unlit_areas))
-
-    #print('Pattern complexity level is : ' + str(complexity_level))
-
-    #creating_patterns.matrix_to_image(filled_image, 'patterns/pattern_3000.png')
 
 
 if __name__ == '__main__':

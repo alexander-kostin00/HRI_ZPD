@@ -1,11 +1,17 @@
+"""
+Author: Oleksandr Kostin
+"""
+
+from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox
 from PatternsComplexityScale.creating_patterns.creating_patterns import CreatingPatterns
 from PIL import Image, ImageDraw, ImageFont
-import argparse
 import shutil
 import os
+import sys
+sys.setrecursionlimit(50000)  # Increase the recursion limit to handle deep recursion
 
 
-def create_patterns(amount=5, complexity_level=6, scaling_factor=0.1, rows=500, columns=500, output_directory_path='patterns_uncovered'):
+def create_patterns(amount=5, complexity_level=6, scaling_factor=0.1, rows=500, columns=500, merge=True, output_directory_path='patterns_uncovered'):
     # Check if the output directory exists and is not empty
     if os.path.exists(output_directory_path) and os.listdir(output_directory_path):
         print(f"Directory {output_directory_path} is not empty. Deleting all files.")
@@ -58,7 +64,7 @@ def create_patterns(amount=5, complexity_level=6, scaling_factor=0.1, rows=500, 
                 break
         else:
             try:
-                creating_patterns = CreatingPatterns(rows, columns, complexity_level, scaling_factor)
+                creating_patterns = CreatingPatterns(rows, columns, complexity_level, scaling_factor, merge)
                 rand_comb = creating_patterns.find_valid_combinations(complexity_level, scaling_factor, False)
 
                 if not rand_comb:
@@ -84,22 +90,90 @@ def create_patterns(amount=5, complexity_level=6, scaling_factor=0.1, rows=500, 
 
     print(f'{int(counter / 2)} patterns have been generated.')
 
+class PatternApp(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Pattern Generator')
+        self.setGeometry(100, 100, 400, 400)
+
+        layout = QVBoxLayout()
+
+        self.amount_input = QLineEdit(self)
+        self.amount_input.setPlaceholderText('Amount (e.g., 10)')
+        layout.addWidget(self.amount_input)
+
+        self.complexity_input = QLineEdit(self)
+        self.complexity_input.setPlaceholderText('Complexity Level (e.g., 10)')
+        layout.addWidget(self.complexity_input)
+
+        self.scaling_factor_input = QLineEdit(self)
+        self.scaling_factor_input.setPlaceholderText('Scaling Factor (e.g., 0.2)')
+        layout.addWidget(self.scaling_factor_input)
+
+        self.columns_input = QLineEdit(self)
+        self.columns_input.setPlaceholderText('Columns (e.g. 3000)')
+        layout.addWidget(self.columns_input)
+
+        self.rows_input = QLineEdit(self)
+        self.rows_input.setPlaceholderText('Rows (e.g. 3000)')
+        layout.addWidget(self.rows_input)
+
+        self.output_path_input = QLineEdit(self)
+        self.output_path_input.setPlaceholderText('Output Directory Path')
+        layout.addWidget(self.output_path_input)
+
+        self.browse_button = QPushButton('Browse', self)
+        self.browse_button.clicked.connect(self.browse_directory)
+        layout.addWidget(self.browse_button)
+
+        self.merge_checkbox = QCheckBox("Merge", self)
+        self.merge_checkbox.setChecked(False)
+        layout.addWidget(self.merge_checkbox)
+
+        self.generate_button = QPushButton('Generate Pattern', self)
+        self.generate_button.clicked.connect(self.generate_pattern)
+        layout.addWidget(self.generate_button)
+
+        self.setLayout(layout)
+
+    def browse_directory(self):
+        directory = QFileDialog.getExistingDirectory(self, 'Select Directory')
+        if directory:
+            self.output_path_input.setText(directory)
+
+    def generate_pattern(self):
+        try:
+            amount = int(self.amount_input.text())
+            complexity_level = int(self.complexity_input.text())
+            scaling_factor = float(self.scaling_factor_input.text())
+            columns = int(self.columns_input.text())
+            rows = int(self.rows_input.text())
+            output_directory = self.output_path_input.text()
+            merge = self.merge_checkbox.isChecked()
+
+            create_patterns(
+                amount=amount,
+                complexity_level=complexity_level,
+                scaling_factor=scaling_factor,
+                rows=rows,
+                columns=columns,
+                merge=merge,
+                output_directory_path=output_directory
+            )
+
+            QMessageBox.information(self, 'Success', f'Patterns generated and saved to {output_directory}')
+        except Exception as e:
+            QMessageBox.critical(self, 'Error', str(e))
+
+
+def main():
+    app = QApplication(sys.argv)
+    ex = PatternApp()
+    ex.show()
+    sys.exit(app.exec())
+
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Generate patterns and number images.')
-    parser.add_argument('--amount', type=int, default=10, help='Number of patterns to generate.')
-    parser.add_argument('--complexity_level', type=int, default=6, help='Complexity level of the patterns.')
-    parser.add_argument('--scaling_factor', type=float, default=0.1, help='Scaling factor for the patterns.')
-    parser.add_argument('--rows', type=int, default=500, help='Number of rows in the image.')
-    parser.add_argument('--columns', type=int, default=500, help='Number of columns in the image.')
-    parser.add_argument('--output_directory_path', type=str, default='patterns_uncovered', help='Directory to save the generated images.')
-
-    args = parser.parse_args()
-
-    create_patterns(
-        amount=args.amount,
-        complexity_level=args.complexity_level,
-        scaling_factor=args.scaling_factor,
-        rows=args.rows,
-        columns=args.columns,
-        output_directory_path=args.output_directory_path
-    )
+    main()
