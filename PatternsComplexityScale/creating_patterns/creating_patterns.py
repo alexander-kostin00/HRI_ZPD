@@ -2,13 +2,11 @@
 Author: Oleksandr Kostin
 """
 
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox
-#from defining_complexity import PatternComplexity
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox
 from PIL import Image
 import itertools
 import random
 import math
-import time
 import sys
 sys.setrecursionlimit(50000)  # Increase the recursion limit to handle deep recursion
 
@@ -38,7 +36,7 @@ class CreatingPatterns:
     def find_valid_combinations(self, complexity_level, scaling_factor, precise):
         valid_combinations = []
 
-        for amount_unlit_areas in range(10):
+        for amount_unlit_areas in range(1, 10):
             for amount_diff_sized_areas in range(1, amount_unlit_areas+1):
                 if not precise:
                     if round(amount_unlit_areas+scaling_factor*amount_diff_sized_areas) == complexity_level:
@@ -66,30 +64,36 @@ class CreatingPatterns:
             random_values = []
             current_sum = 0
             limit = int((min(len(lit_image), len(lit_image[0])) / 3) ** 2)
-
             # Generate unique values
             attempts = 0
             if amount_unlit_areas == amount_diff_sized_areas:
                 while len(random_values) < amount_unlit_areas and attempts < 1000:
-                    random_integer = random.randint(1, limit)
-                    #random_integer = random.randint(1, limit // 2) * 2
+                    random_integer = random.randint(1, limit+1)
 
                     if random_integer not in random_values:
                         random_values.append(random_integer)
                         current_sum += random_integer
+                    if (target_sum - current_sum) <= limit:
+                        final = target_sum - current_sum
+                        random_values.append(final)
+                        current_sum += final
                     if current_sum == target_sum and len(random_values) == amount_unlit_areas:
                         return random_values
                     attempts += 1
+                return random_values
             else:
                 attempts = 0
                 while len(random_values) < amount_diff_sized_areas and attempts < 500:
-                    random_integer = random.randint(1, limit)
-                    #random_integer = random.randint(1, limit // 2) * 2
+                    random_integer = random.randint(1, limit+1)
 
                     if random_integer not in random_values:
                         random_values.append(random_integer)
                         current_sum += random_integer
-                    if (current_sum == 2/3*target_sum) and len(random_values) == amount_diff_sized_areas:
+                    if (int(2/3*target_sum) - current_sum) <= limit:
+                        final = int(2/3*target_sum) - current_sum
+                        random_values.append(final)
+                        current_sum += final
+                    if (current_sum == int(2/3*target_sum)) and len(random_values) == amount_diff_sized_areas:
                         break
                     attempts += 1
 
@@ -104,6 +108,7 @@ class CreatingPatterns:
                         print(random_values)
                         return random_values
                     attempts += 1
+                return random_values
             ATTEMPTS += 1
             print("ATTEMPT:" + str(ATTEMPTS))
 
@@ -245,11 +250,11 @@ class PatternApp(QWidget):
         layout = QVBoxLayout()
 
         self.complexity_input = QLineEdit(self)
-        self.complexity_input.setPlaceholderText('Complexity Level (e.g., 10)')
+        self.complexity_input.setPlaceholderText('Complexity Level (e.g. 10)')
         layout.addWidget(self.complexity_input)
 
         self.scaling_factor_input = QLineEdit(self)
-        self.scaling_factor_input.setPlaceholderText('Scaling Factor (e.g., 0.2)')
+        self.scaling_factor_input.setPlaceholderText('Scaling Factor (e.g. 0.2)')
         layout.addWidget(self.scaling_factor_input)
 
         self.columns_input = QLineEdit(self)
