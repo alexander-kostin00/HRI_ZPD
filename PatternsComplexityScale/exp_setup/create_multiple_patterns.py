@@ -2,14 +2,13 @@
 Author: Oleksandr Kostin
 """
 
-from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox
+from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox, QCheckBox
 from PatternsComplexityScale.creating_patterns.creating_patterns import CreatingPatterns
 from PIL import Image, ImageDraw, ImageFont
 import shutil
 import os
 import sys
 sys.setrecursionlimit(50000)  # Increase the recursion limit to handle deep recursion
-
 
 def create_patterns(amount=5, complexity_level=6, scaling_factor=0.1, rows=500, columns=500, merge=True, output_directory_path='patterns_uncovered'):
     # Check if the output directory exists and is not empty
@@ -64,25 +63,38 @@ def create_patterns(amount=5, complexity_level=6, scaling_factor=0.1, rows=500, 
                 break
         else:
             try:
-                creating_patterns = CreatingPatterns(rows, columns, complexity_level, scaling_factor, merge)
-                rand_comb = creating_patterns.find_valid_combinations(complexity_level, scaling_factor, False)
+                retry_count = 0
+                max_retries = 500
 
-                if not rand_comb:
-                    print('Error', 'No valid combinations found.')
-                    print(str(counter_numbers) + ' images have been generated for now.')
-                    return
+                while retry_count < max_retries:
+                    try:
+                        creating_patterns = CreatingPatterns(rows, columns, complexity_level, scaling_factor, merge)
+                        rand_comb = creating_patterns.find_valid_combinations(complexity_level, scaling_factor, False)
 
-                # Create the pattern image
-                lit_image = creating_patterns.create_lit_image(columns, rows)
-                target_sum = round((len(lit_image) * len(lit_image[0])) / 3)
-                unlit_areas = creating_patterns.generate_unlit_regions(rand_comb[0], rand_comb[1], lit_image, target_sum)
-                filled_image = creating_patterns.fill_image(lit_image, unlit_areas)
-                creating_patterns.print_matrix(filled_image)
-                pattern_output_path = f'{output_directory_path}/image_{counter + 1}.png'
-                creating_patterns.matrix_to_image(filled_image, pattern_output_path)
-                print(f'Success: Pattern generated and saved to {pattern_output_path}.')
+                        if not rand_comb:
+                            print('Error', 'No valid combinations found.')
+                            print(str(counter_numbers) + ' images have been generated for now.')
+                            return
 
-                counter += 1
+                        # Create the pattern image
+                        lit_image = creating_patterns.create_lit_image(columns, rows)
+                        target_sum = round((len(lit_image) * len(lit_image[0])) / 3)
+                        unlit_areas = creating_patterns.generate_unlit_regions(rand_comb[0], rand_comb[1], lit_image, target_sum)
+                        filled_image = creating_patterns.fill_image(lit_image, unlit_areas)
+                        creating_patterns.print_matrix(filled_image)
+                        pattern_output_path = f'{output_directory_path}/image_{counter + 1}.png'
+                        creating_patterns.matrix_to_image(filled_image, pattern_output_path)
+                        print(f'Success: Pattern generated and saved to {pattern_output_path}.')
+
+                        counter += 1
+
+                        break
+
+                    except Exception as e:
+                        print(str(e))
+                        retry_count += 1
+                        if retry_count >= max_retries:
+                            print(f"Maximum retries exceeded for pattern {counter_numbers + 1}. Skipping this pattern.")
 
             except Exception as e:
                 print('Error:', str(e))
@@ -102,15 +114,15 @@ class PatternApp(QWidget):
         layout = QVBoxLayout()
 
         self.amount_input = QLineEdit(self)
-        self.amount_input.setPlaceholderText('Amount (e.g., 10)')
+        self.amount_input.setPlaceholderText('Amount (e.g. 10)')
         layout.addWidget(self.amount_input)
 
         self.complexity_input = QLineEdit(self)
-        self.complexity_input.setPlaceholderText('Complexity Level (e.g., 10)')
+        self.complexity_input.setPlaceholderText('Complexity Level (e.g. 10)')
         layout.addWidget(self.complexity_input)
 
         self.scaling_factor_input = QLineEdit(self)
-        self.scaling_factor_input.setPlaceholderText('Scaling Factor (e.g., 0.2)')
+        self.scaling_factor_input.setPlaceholderText('Scaling Factor (e.g. 0.2)')
         layout.addWidget(self.scaling_factor_input)
 
         self.columns_input = QLineEdit(self)
