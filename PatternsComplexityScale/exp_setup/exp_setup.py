@@ -176,7 +176,7 @@ class ImageSlideshow(QWidget):
         for i in range(button_count):
             button = QPushButton(str(i + 1), self)
             button.setFixedSize(50, 50)
-            button.setStyleSheet("color: white;")
+            button.setStyleSheet("color: black;") #anna: changed color to black
             button.setFont(QFont('Arial', 16))
             button.clicked.connect(self.check_button)
             button_layout.addWidget(button)
@@ -207,7 +207,7 @@ class ImageSlideshow(QWidget):
         visibility_value = float(last_masked_image_filename.split('_')[-1].replace('.png', ''))
 
         if result:
-            new_visibility_value = round(visibility_value / constants['decreasing_step'], 3)
+            new_visibility_value = round(visibility_value - constants['decreasing_step'], 2) # anna: made increase and decrease consistent
             print('New visibility value is ' + str(new_visibility_value))
         else:
             new_visibility_value = round(visibility_value + constants['increasing_step'], 2)
