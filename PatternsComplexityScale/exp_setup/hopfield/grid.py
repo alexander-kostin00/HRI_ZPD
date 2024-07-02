@@ -2,7 +2,12 @@ import cv2
 import numpy as np
 import os
 import time
-import constants
+import sys
+sys.path.append('/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale')
+
+# Now import constants
+from exp_setup.hopfield import constants
+
 import matplotlib.pyplot as plt
 
 '''This script contains several functions for displaying the grids and images and preprocessing them.'''

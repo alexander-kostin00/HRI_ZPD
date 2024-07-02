@@ -5,6 +5,12 @@ Author: Oleksandr Kostin
 from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton, QVBoxLayout
 from PyQt6.QtGui import QPixmap, QScreen, QFont
 from PyQt6.QtCore import QTimer, Qt
+import sys
+import os
+
+# Add the project root directory to the sys.path
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
+sys.path.append(project_root)
 
 from PatternsComplexityScale.creating_masks.creating_masks import CreatingMasks
 from constants import constants
@@ -16,6 +22,8 @@ import re
 
 def apply_mask(visible, pieces, output_directory_path):
     try:
+
+
         input_directory_path = 'patterns_uncovered'
 
         files = [
