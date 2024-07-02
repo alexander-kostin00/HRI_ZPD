@@ -11,10 +11,6 @@ import math
 import sys
 sys.setrecursionlimit(50000)  # Increase the recursion limit to handle deep recursion
 
-
-class TimeoutError(Exception):
-    pass
-
 class CreatingPatterns:
     def __init__(self, rows, columns, complexity_level, scaling_factor, merge):
         # Initialize class attributes
@@ -333,7 +329,7 @@ class PatternApp(QWidget):
                     QMessageBox.information(self, 'Success', f'Pattern generated and saved to {output_path}')
                     break
 
-                except TimeoutError as e:
+                except Exception as e:
                     print(str(e))
                     retry_count += 1
                     if retry_count >= max_retries:

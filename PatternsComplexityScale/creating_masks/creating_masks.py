@@ -1,12 +1,14 @@
+"""
+Author: Oleksandr Kostin
+"""
+
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLineEdit, QPushButton, QFileDialog, QMessageBox
 from PIL import Image
-import numpy as np
 import random
 import time
 import math
 import cv2
 import sys
-
 
 
 class CreatingMasks:
@@ -26,36 +28,27 @@ class CreatingMasks:
 
     def create_visible_areas(self):
         side_length = int(math.sqrt(self.piece_area))
-        time_limit = 5 * self.pieces
+        time_limit = 2
 
-        while True:
-            self.boundaries.clear()
+        for i in range(self.pieces):
             start_time = time.time()
+            available = False
 
-            for i in range(self.pieces):
-                available = False
-                while not available:
-                    if time.time() - start_time > time_limit:
-                        print("Timeout: Restarting the process.")
-                        break
-
-                    r_col = random.randint(0, self.color_matrix.shape[1] - 1)
-                    r_row = random.randint(0, self.color_matrix.shape[0] - 1)
-
-                    print('RANDOM START COORDINATES: ' + str(r_row) + ' ' + str(r_col))
-
-                    available = self.check_region(r_row, r_col, side_length)
-
-                    if available:
-                        self.boundaries.append([r_col, r_row, r_col + side_length - 1, r_row + side_length - 1])
-
+            while not available:
                 if time.time() - start_time > time_limit:
+                    print("Timeout: Restarting the process.")
                     break
 
-            if time.time() - start_time <= time_limit:
-                break
+                r_col = random.randint(0, self.color_matrix.shape[1] - 1)
+                r_row = random.randint(0, self.color_matrix.shape[0] - 1)
 
-        print(self.boundaries)
+                print('RANDOM START COORDINATES: ' + str(r_row) + ' ' + str(r_col))
+
+                available = self.check_region(r_row, r_col, side_length)
+
+                if available:
+                    self.boundaries.append([r_col, r_row, r_col + side_length - 1, r_row + side_length - 1])
+                    print(self.boundaries)
 
     def xy(self, row, column):
         if column < 0 or row < 0 or column >= self.color_matrix.shape[1] or row >= self.color_matrix.shape[0]:
@@ -145,13 +138,25 @@ class MaskApp(QWidget):
             pieces = int(self.pieces_input.text())
             input_path = self.input_path_input.text()
             output_path = self.output_path_input.text()
+            retry_count = 0
+            max_retries = 500
 
-            creating_masks = CreatingMasks(input_path, visible, pieces)
-            creating_masks.create_visible_areas()
-            creating_masks.cover_image()
-            creating_masks.matrix_to_image(creating_masks.color_matrix, output_path)
+            while retry_count < max_retries:
+                try:
+                    creating_masks = CreatingMasks(input_path, visible, pieces)
+                    creating_masks.create_visible_areas()
+                    creating_masks.cover_image()
+                    creating_masks.matrix_to_image(creating_masks.color_matrix, output_path)
 
-            QMessageBox.information(self, 'Success', f'Mask generated and saved to {output_path}')
+                    QMessageBox.information(self, 'Success', f'Mask generated and saved to {output_path}')
+                    break
+
+                except Exception as e:
+                    print(str(e))
+                    retry_count += 1
+                    if retry_count >= max_retries:
+                        QMessageBox.critical(self, 'Error', 'Maximum retries exceeded. Could not generate mask.')
+
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
 
@@ -161,23 +166,6 @@ def main():
     ex = MaskApp()
     ex.show()
     sys.exit(app.exec())
-    #path = 'patterns/image1.png'     # Path to image
-    #visible = 0.01       # Percentage value of the part of the image that will remain visible after applying masking
-    #pieces = 100   # Amount of rectangles into which the visible part of the picture is divided
-
-    #creating_masks = CreatingMasks(path, visible, pieces)
-    #color_matrix = creating_masks.color_matrix
-
-    #print(color_matrix)
-    #print()
-    #print('Hight: ' + str(len(color_matrix)))
-    #print('Wigth: ' + str(len(color_matrix[0])))
-    #print()
-
-    #creating_masks.create_visible_areas()
-    #creating_masks.cover_image()
-
-    #matrix_to_image(creating_masks.color_matrix, 'patterns_covered/image6.png')
 
 
 
