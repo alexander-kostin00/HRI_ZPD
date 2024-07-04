@@ -86,28 +86,30 @@ def calc_stateupdate_async(all_states, weights, max_state_changes, max_epoch_cou
     state_change_counter = 0
     new_s = np.copy(all_states)
     s_orig = np.copy(all_states)
+    s_check = np.copy(all_states)
     k = 1
+    print(len(all_states))
     while state_change_counter < max_state_changes and epoch_count < max_epoch_count:
-        rand_ind = np.random.randint(len(all_states) - 1)
+        rand_ind = np.random.randint(len(all_states)) #pick a random pixel
         epoch_count += 1
         wi = weights[rand_ind, :]
-        new_s[rand_ind] = get_sign(calc_dotproduct_async(all_states, wi))
+        new_s[rand_ind] = get_sign(calc_dotproduct_async(all_states, wi)) #update one pixel in the image according to the state update rule
         if new_s[rand_ind] != s_orig[rand_ind]:
-            changed_bits += 1
+            changed_bits += 1 # increase changed bits if the pixel was changed from the original input
         state_change = False
         for i in range(len(new_s)):
-            if new_s[i] != s_orig[i]:
+            if new_s[i] != s_orig[i]: # check if any pixel changed in the  updated image compared to the orig img
                 state_change = True
                 break
         if state_change:
             state_change_counter += 1
         else:
             state_change_counter = 0
-        if epoch_count == 7*len(all_states)*k:  # number is a magic number I am trying out how many runs over the amount of states with random state choice it needs
-            test_converge = new_s == all_states
-            if np.all(test_converge):
+        if epoch_count == len(all_states)/2*k:  # number is a magic number I am trying out how many runs over the amount of states with random state choice it needs
+            print('CONVERGENCE TEST', 'in epoch', epoch_count)
+            if np.array_equal(new_s, s_check):
                 print('converged after {} epocs'.format(epoch_count))
                 break
-            all_states = new_s
+            s_check = np.copy(new_s)
             k += 1
     return new_s, changed_bits, state_change_counter, epoch_count

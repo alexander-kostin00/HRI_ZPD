@@ -6,7 +6,7 @@ def create_directory(path):
         os.makedirs(path)
 
 def generate_masks_for_parameters(input_paths, visible_range, num_masks_per_set, base_output_dir):
-    for input_path in input_paths:
+    for image_no, input_path in enumerate(input_paths):
         input_filename = os.path.basename(input_path).split('.')[0]
         for visible in visible_range:
             # Create a directory for each visible parameter
@@ -14,7 +14,7 @@ def generate_masks_for_parameters(input_paths, visible_range, num_masks_per_set,
             create_directory(output_dir)
 
             for i in range(num_masks_per_set):
-                output_path = os.path.join(output_dir, f'mask_{i + 1}.png')
+                output_path = os.path.join(output_dir, f'mask_{i}_visible_{visible:.2f}_pattern_{image_no}.png')
                 generate_mask_file(input_path, visible, num_pieces, output_path)
 
 if __name__ == '__main__':

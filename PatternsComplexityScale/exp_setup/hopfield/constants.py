@@ -54,7 +54,7 @@ length = 11  # the length of the game grid
 nruns = 10 # number of runs --> episodes
 iterations = 20 # iteration to run the SARSA for
 repeats = 10 # new repeat = new q-matrix for this 'run'. We set repeats to 10 for offline experiments.
-rsize = (32, 32)  # size of the images, the images displayed on screen should be in the same format
+rsize = (38, 38)  # size of the images, the images displayed on screen should be in the same format
 ntrainimgs = 5  # number of images that the Hopfield net is trained with
 epsilon = 0.3  # exploration parameter
 gamma = 0.4  # discounting
