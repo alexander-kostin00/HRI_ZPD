@@ -1,3 +1,7 @@
+"""
+Author: Oleksandr Kostin
+"""
+
 # All three patterns have the same number of lit and unlit pixels, only their configuration changes
 
 pattern_easy = [[1, 1, 1, 1, 1, 1],
