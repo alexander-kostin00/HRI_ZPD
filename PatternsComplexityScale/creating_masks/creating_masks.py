@@ -74,7 +74,7 @@ class CreatingMasks:
                     if (j >= bound[0] and j <= bound[2]) and (i >= bound[1] and i <= bound[3]):
                         break
                 else:
-                    self.color_matrix[i, j] = green_color  # Fill with green color
+                    self.color_matrix[i, j] = random.choice([(255,255,255), (0,0,0)])
 
     def matrix_to_image(self, matrix, filename):
         image = Image.fromarray(matrix.astype('uint8'), 'RGB')
@@ -166,7 +166,6 @@ def main():
     ex = MaskApp()
     ex.show()
     sys.exit(app.exec())
-
 
 
 if __name__ == '__main__':
