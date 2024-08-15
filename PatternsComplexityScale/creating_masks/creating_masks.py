@@ -160,6 +160,12 @@ class MaskApp(QWidget):
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
 
+def generate_mask_file(input_path, visible, pieces, output_path):
+    creating_masks = CreatingMasks(input_path, visible, pieces)
+    creating_masks.create_visible_areas()
+    creating_masks.cover_image()
+    creating_masks.matrix_to_image(creating_masks.color_matrix, output_path)
+
 
 def main():
     app = QApplication(sys.argv)

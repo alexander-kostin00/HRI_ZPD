@@ -1,5 +1,5 @@
 """
-Author: Oleksandr Kostin
+Author: Oleksandr Kostin/Anna Lange
 """
 
 from PyQt6.QtWidgets import QApplication, QLabel, QWidget, QHBoxLayout, QSpacerItem, QSizePolicy, QPushButton, QVBoxLayout
@@ -7,6 +7,7 @@ from PyQt6.QtGui import QPixmap, QScreen, QFont
 from PyQt6.QtCore import QTimer, Qt
 import sys
 import os
+import shutil
 
 # Add the project root directory to the sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
@@ -20,17 +21,29 @@ import sys
 import os
 import re
 
-def apply_mask(visible, pieces, output_directory_path):
+def collect_mask(level, output_directory_path):
+
+    '''
+    Parameters:
+        level: relates to a range of flipped bits as calculated by the Hopfield Network
+    '''
+
+    print('entered collect mask')
+
     try:
 
 
-        input_directory_path = 'patterns_uncovered'
+        input_directory_path = 'masks_hopfield'
+
+        level_str = str(level)
+
+        subfolder_path = os.path.join(input_directory_path, level_str)
+
+        print(subfolder_path)
 
         files = [
-            f for f in os.listdir(input_directory_path)
-            if os.path.isfile(os.path.join(input_directory_path, f)) and
-               any(char.isdigit() for char in f) and
-               int(''.join(filter(str.isdigit, f))) % 2 == 0
+            f for f in os.listdir(subfolder_path)
+            if os.path.isfile(os.path.join(subfolder_path, f))
         ]
 
         print(files)
@@ -44,16 +57,13 @@ def apply_mask(visible, pieces, output_directory_path):
         print(files_output)
 
         chosen_file = random.choice(files)
-        pattern_path = os.path.join(input_directory_path, chosen_file)
-
-        creating_masks = CreatingMasks(pattern_path, visible, pieces)
-        creating_masks.create_visible_areas()
-        creating_masks.cover_image()
+        pattern_path = os.path.join(subfolder_path, chosen_file)
 
         file_root, extention = os.path.splitext(chosen_file)
         output_path = output_directory_path + '/' + str(len(files_output) + 1) + '_' + file_root + '_covered_' + str(
-            visible) + extention
-        creating_masks.matrix_to_image(creating_masks.color_matrix, output_path)
+            level) + extention
+
+        shutil.copy(pattern_path, output_path)
 
         print(f'Mask generated and saved to {output_path}')
     except Exception as e:
@@ -156,7 +166,7 @@ class ImageSlideshow(QWidget):
             self.cleanup_masked_image_dir()
             self.cleanup_done = True
 
-        masked_image_path = self.get_last_masked_image()
+        masked_image_path = self.get_last_masked_image() #getting the path, change to get the respective mask from a path
         pixmap = QPixmap(masked_image_path)
 
         # Scale the pixmap to fit the screen size while maintaining the aspect ratio
@@ -206,33 +216,51 @@ class ImageSlideshow(QWidget):
                 except Exception as e:
                     print(f'Error: {e}')
 
-        apply_mask(constants['mask_visibility_initial'], random.randint(constants['mask_pieces_min'], constants['mask_pieces_max']), self.masked_image_dir)
+        collect_mask(constants['mask_level_initial'], self.masked_image_dir)
+        print('Collected the initial mask')
 
     def handle_button(self, result):
         masked_image_path = self.get_last_masked_image()
         # Extract the visibility value from the last masked image filename
+        last_masked_image_dir = os.path.dirname(masked_image_path)
+        print(last_masked_image_dir)
         last_masked_image_filename = os.path.basename(masked_image_path)
-        visibility_value = float(last_masked_image_filename.split('_')[-1].replace('.png', ''))
+        level_value = int(last_masked_image_filename.split('_')[-1].replace('.png', ''))
+
+
+            #(float(last_masked_image_filename.split('_')[-1].replace('.png', '')))
 
         if result:
-            new_visibility_value = round(visibility_value - constants['decreasing_step'], 2) # anna: made increase and decrease consistent
-            print('New visibility value is ' + str(new_visibility_value))
+            new_level_value = level_value - 1 # anna: made increase and decrease consistent
+            print('New level value is ' + str(new_level_value))
         else:
-            new_visibility_value = round(visibility_value + constants['increasing_step'], 2)
-            print('New visibility value is ' + str(new_visibility_value))
+            new_level_value = level_value + 1
+            print('New level value is ' + str(new_level_value))
 
-        # Check the visibility limits
-        if new_visibility_value <= constants['visibility_minimum']:
-            self.display_message("YOU WON")
-        elif new_visibility_value >= constants['visibility_maximum']:
-            self.display_message("YOU LOST")
+        # Check the visibility limitsvisibility
+
+        last_masked_image_filename = os.path.basename(masked_image_path)
+
+
+        match = re.search(r'\d+\.\d+', last_masked_image_filename)
+        if match:
+            visibility_value = float(match.group())
+            print(f"The extracted floating-point value is: {visibility_value}")
+            if visibility_value <= constants['visibility_minimum']:
+                self.display_message("YOU WON")
+            elif visibility_value >= constants['visibility_maximum']:
+                self.display_message("YOU LOST")
+            else:
+                #
+                print('Apply the mask with new visibility value')
+                thread = threading.Thread(target=self.collect_mask_and_show, args=(new_level_value,))
+                thread.start()
         else:
-            # Apply the mask with new visibility value
-            thread = threading.Thread(target=self.apply_mask_and_show, args=(new_visibility_value,))
-            thread.start()
+            print("No floating-point number found in the file name.")
 
-    def apply_mask_and_show(self, new_visibility_value):
-        apply_mask(new_visibility_value, random.randint(constants['mask_pieces_min'], constants['mask_pieces_max']), self.masked_image_dir)
+
+    def collect_mask_and_show(self, new_level_value):
+        collect_mask(new_level_value, self.masked_image_dir)
         QTimer.singleShot(0, self.show_masked_image)  # Ensure UI update on main thread
 
     def clear_layout(self, layout):
@@ -254,6 +282,7 @@ class ImageSlideshow(QWidget):
                 self.clear_layout(item.layout())
 
     def get_last_masked_image(self):
+        print(self.masked_image_dir)
         masked_image_files = [f for f in os.listdir(self.masked_image_dir) if
                               f.lower().endswith(('.png', '.jpg', '.jpeg'))]
         if not masked_image_files:
@@ -279,9 +308,9 @@ class ImageSlideshow(QWidget):
             # Extract the second integer from the last masked image filename
             last_masked_image_filename = os.path.basename(masked_image_path)
             numbers_in_filename = [int(s) for s in last_masked_image_filename.split('_') if s.isdigit()]
-
+            print(last_masked_image_filename, numbers_in_filename)
             if len(numbers_in_filename) >= 2:
-                correct_value = numbers_in_filename[1] // 2
+                correct_value = numbers_in_filename[1]
                 if button_number == correct_value:
                     print("CORRECT")
                     self.display_feedback(True)
@@ -325,7 +354,7 @@ class ImageSlideshow(QWidget):
         message_label = QLabel(message, self)
         message_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         message_label.setFont(QFont('Arial', 48))
-        message_label.setStyleSheet("color: white;")
+        message_label.setStyleSheet("color: black;") #anna:changed color to black
 
         # Add the label to the layout
         self.image_layout.addWidget(message_label)
@@ -338,7 +367,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     image_dir = 'patterns_uncovered'
-    masked_image_dir = 'masked'
+    masked_image_dir ='masked' #'masked'
     window = ImageSlideshow(image_dir, masked_image_dir)
     window.show()
 

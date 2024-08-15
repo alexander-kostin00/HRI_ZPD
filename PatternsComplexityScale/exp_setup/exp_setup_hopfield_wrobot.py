@@ -9,17 +9,26 @@ import sys
 import os
 import shutil
 
+
 # Add the project root directory to the sys.path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..'))
 sys.path.append(project_root)
 
-from PatternsComplexityScale.creating_masks.creating_masks import CreatingMasks
+#from PatternsComplexityScale.creating_masks.creating_masks import CreatingMasks
 from constants import constants
 import threading
 import random
-import sys
-import os
 import re
+import qi
+import numpy as np
+from PIL import Image
+import glob
+import cv2
+import matplotlib.pyplot as plt
+from collections import deque
+import time
+
+
 
 def collect_mask(level, output_directory_path):
 
@@ -71,11 +80,13 @@ def collect_mask(level, output_directory_path):
 
 
 class ImageSlideshow(QWidget):
-    def __init__(self, image_dir, masked_image_dir):
+    def __init__(self, image_dir, masked_image_dir, train_dir, mask_capture_dir):
         super().__init__()
 
         self.image_dir = image_dir
         self.masked_image_dir = masked_image_dir
+        self.train_dir = train_dir
+        self.mask_capture_dir = mask_capture_dir
         self.image_files = self.get_image_files()
         self.current_index = 0
         self.cleanup_done = False
@@ -136,14 +147,21 @@ class ImageSlideshow(QWidget):
         # Display the current image
         image_path = os.path.join(self.image_dir, self.image_files[self.current_index])
         pixmap = QPixmap(image_path)
+        print(image_path)
 
         # Scale the pixmap to fit the screen size while maintaining the aspect ratio
         scaled_pixmap = pixmap.scaled(self.screen_width, self.screen_height, Qt.AspectRatioMode.KeepAspectRatio)
 
         self.label.setPixmap(scaled_pixmap)
 
+
+
         # Resize the window to match the screen size
         self.resize(self.screen_width, self.screen_height)
+        print(self.current_index)
+        if self.current_index % 2 == 1: #only save the odd images as those are the patterns
+            filename_pattern = f'pattern_{self.current_index}.png'
+            QTimer.singleShot(150, lambda: self.capture_and_save_image(filename_pattern, 'train')) #150 ms delay
 
     def show_next_image(self):
         # Increment the index after showing the image
@@ -176,6 +194,15 @@ class ImageSlideshow(QWidget):
         self.label.setPixmap(scaled_pixmap)
         self.label.repaint()  # Force the label to repaint
 
+        # Call the function to capture the image with the robot camera
+
+        mask_files = len([f for f in os.listdir(self.masked_image_dir) if
+                       f.lower().endswith(('.png', '.jpg', '.jpeg'))])
+
+        filename_mask = f'mask_{mask_files}.png'
+
+        QTimer.singleShot(5, lambda: self.capture_and_save_image(filename_mask, 'mask')) # Delay of 100 milliseconds
+
         # Clear existing layout items except the label
         self.clear_layout(self.image_layout)
 
@@ -191,6 +218,7 @@ class ImageSlideshow(QWidget):
         button_layout = QHBoxLayout()
         button_layout.addItem(QSpacerItem(1, 1, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
 
+
         for i in range(button_count):
             button = QPushButton(str(i + 1), self)
             button.setFixedSize(50, 50)
@@ -203,6 +231,17 @@ class ImageSlideshow(QWidget):
 
         self.image_layout.addLayout(button_layout)
 
+        # Additional processing after UI update
+        # Optionally, delay further processing to ensure capture is complete
+        QTimer.singleShot(50, self.after_capture_processing)
+
+    def after_capture_processing(self):
+        # Calculate cognitive load for the robot
+        flipped_bits, flattened_image = self.calculate_flipped_bits()
+
+        # Check most similar pattern
+        pattern_choice = self.check_similarity(flattened_image)
+
         # Stop the timer since we are done with the slideshow
         self.timer.stop()
 
@@ -210,6 +249,14 @@ class ImageSlideshow(QWidget):
         if os.path.exists(self.masked_image_dir):
             for f in os.listdir(self.masked_image_dir):
                 file_path = os.path.join(self.masked_image_dir, f)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    print(f'Error: {e}')
+        if os.path.exists(self.mask_capture_dir):
+            for f in os.listdir(self.mask_capture_dir):
+                file_path = os.path.join(self.mask_capture_dir, f)
                 try:
                     if os.path.isfile(file_path):
                         os.unlink(file_path)
@@ -362,13 +409,289 @@ class ImageSlideshow(QWidget):
         # Resize the window to fit the screen size
         self.resize(self.screen_width, self.screen_height)
 
+    def capture_and_save_image(self, filename, train_or_mask):
+        # Capture the image with the robot camera
+        result, image = self.capture_robot_camera()
+
+
+        # Convert the image to a PIL Image
+        img = Image.fromarray(image)
+
+        # crop the image
+        # commented out for now, only relevant for actual game, then this needs to be calibrated before starting
+        # so that the pattern is cropped
+        # img_res = img.crop((constants['left'], constants['top'], constants['right'], constants['bottom'])
+        # when uncommenting below change to save cropped, maybe cropping needs to be done separately for train and masked as the position on screen is different
+        if train_or_mask == 'train':
+
+            # Save the image with to the trainimgs location
+            filename_train = os.path.join(self.train_dir, filename)
+            img.save(filename_train)
+        else:
+            filename_mask = os.path.join(self.mask_capture_dir, filename)
+            img.save(filename_mask)
+
+        #img_res.save(filename)
+
+    def capture_robot_camera(self):
+        """ Capture images from Robot's TOP camera. Note that the Nao's
+            camera resolution is lower than the Pepper robot.
+            Remember you need to subscribe and unsubscribe respectively
+            see, https://ai-coordinator.jp/pepper-ssd#i-3
+        """
+        SubID = "Pepper"  # change to NAO if needed
+        session = qi.Session()
+        session.connect("tcp://" + constants['ip'] + ":" + str(constants['port'] ))
+
+        videoDevice_robot = session.service('ALVideoDevice')
+        # subscribe top camera, Image of 320*240px
+        AL_kTopCamera, AL_kQVGA, Frame_Rates = 0, 1, 5  # 2.5  #10
+        AL_kBGRColorSpace = 13  # Buffer contains triplet on the format 0xRRGGBB, equivalent to three unsigned char
+        captureDevice_nao = videoDevice_robot.subscribeCamera(SubID, AL_kTopCamera, AL_kQVGA, AL_kBGRColorSpace,
+                                                              Frame_Rates)
+
+        width, height = 320, 240
+        image = np.zeros((height, width, 3), np.uint8)
+        result = videoDevice_robot.getImageRemote(captureDevice_nao)
+
+        if result == None:
+            print("Camera problem.")
+        elif result[6] == None:
+            print("No image. ")
+        else:
+            # translate value to mat
+            values = result[6]
+            i = 0
+            for y in range(0, height):
+                for x in range(0, width):
+                    image[y, x, 0] = values[i + 0]
+                    image[y, x, 1] = values[i + 1]
+                    image[y, x, 2] = values[i + 2]
+                    i += 3
+
+        # unsubscribe from the camera
+        videoDevice_robot.unsubscribe(captureDevice_nao)
+        return result[6], image
+
+    def calculate_flipped_bits(self):
+        '''Calculates the bits that were flipped in the Hopfield network as a way to measure
+         how easy it is to retrieve one of the trained patterns. This is based on the robots screenshots.'''
+
+        # run the image trough the hopfield to generate an energy
+        #filename_train = #set the filepath where the training images are saved
+        train_imgs = self.bipolarize_pattern_robot_train(self.train_dir, 5) #5 training imgs
+        weights_h = self.calc_weights(train_imgs)
+        print('the masking directory', self.mask_capture_dir)
+        masked_captured_files = [f for f in os.listdir(self.mask_capture_dir) if
+                              f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+        if not masked_captured_files:
+            raise FileNotFoundError("No masked image files found in the specified directory.")
+
+        print('the masked filename', masked_captured_files)
+
+        # Extract the integer prefix and sort the files based on this prefix
+        masked_captured_files.sort(key=lambda f: int(re.match(r'mask_(\d+)', f).group(1)), reverse=True)
+
+        masked_capture_path = os.path.join(self.mask_capture_dir, masked_captured_files[0])
+
+        #print(masked_capture_path)
+
+        current_pattern = self.bipolarize_pattern_robot(masked_capture_path)
+
+        new_s1, changed_bits1, epochs1 = self.calc_stateupdate_async(current_pattern, weights_h, 1000)
+        # Extract the flattened image from the 'images' array
+        flattened_image = new_s1
+        energy_state = changed_bits1 #use this value to determine next level
+        return energy_state, flattened_image
+
+    def bipolarize_pattern_robot_train(self, path, no_imgs):
+
+        """ Convert list of pattern images for training into Bipolarized (-1, 1) inputs.
+        Parameters
+        -----------
+        path: filename
+        location where the image is located
+        no_imgs: integer
+        amount of training images
+
+
+        Return
+        -------
+        images in format for Hopfield Network"""
+
+        print('This is generating the training images.')
+        images = np.zeros((constants['rsize'][0] * constants['rsize'][1], no_imgs))
+        k = 0
+        for j in range(no_imgs):
+            # image directory with image names as ordered ints
+            g = j + 1 +  k
+            filename_train = 'pattern_{}.png'.format(g)
+            k += 1
+            filepath_train = os.path.join(path, filename_train)
+            print('The training image path is', filepath_train)
+            image = cv2.imread(filepath_train, cv2.IMREAD_GRAYSCALE)
+            print(image.shape)
+            rimg = cv2.resize(image, constants['rsize'], interpolation=cv2.INTER_AREA)
+            bimg = cv2.threshold(rimg, 125, 255, cv2.THRESH_BINARY)[1]
+            # convert 255 to -1 and 0 to 1
+            bimg = bimg.astype('int64')
+            nonz_inds = bimg.nonzero()
+            bimg[nonz_inds], bimg[bimg == 0] = -1, 1  # convert 255 to -1 and 0 to 1
+            savename = path + 'check%s.png' % j
+
+            plt.imsave(savename, bimg, cmap='Greys')
+            images[:, j] = bimg.flatten()
+
+        return images
+    def check_similarity(self, converged_image):
+        '''This function checks how similar a converged image (from a masked image shown) is to each of the training
+        and returns the training image that is most similar. In this way it allows the robot to choose the image it
+        recognizes.
+        '''
+
+        accuracies = np.zeros(5)
+
+        # pattern paths
+
+        pattern_path = os.path.join(self.train_dir, f'*.png')
+        # Use glob to get all file paths matching the pattern
+        filepaths = glob.glob(pattern_path)
+
+        for n, pattern_path in enumerate(filepaths):
+            compare_pattern = self.bipolarize_pattern_robot(pattern_path)
+            accuracies[n] = np.mean(compare_pattern == converged_image)
+            print(f"Accuracy for pattern{n}: {accuracies[n]}")
+
+        max_pattern = np.argmax(accuracies) + 1
+        return max_pattern
+
+    def bipolarize_pattern_robot(self, pattern_name):
+
+        """ Convert percieved patterns images into Bipolarized (-1, 1) inputs.
+        Parameters
+        -----------
+        pattern_name: filename
+        location where the image is located
+        Return
+        -------
+        images in format for Hopfield Network"""
+
+        gimg = cv2.imread(pattern_name, cv2.IMREAD_GRAYSCALE)
+
+        rimg = cv2.resize(gimg, constants['rsize'])
+        bimg = cv2.threshold(rimg, 125, 255, cv2.THRESH_BINARY)[1]
+
+        cv2.waitKey(0)
+
+        cv2.destroyAllWindows()
+
+        # convert 255 to -1 and 0 to 1
+        bimg = bimg.astype('int64')
+        print("bipolorized 2")
+        nonz_inds = bimg.nonzero()
+        print("bipolorized 3")
+        bimg[nonz_inds], bimg[bimg == 0] = -1, 1  # convert 255 to -1 and 0 to 1
+        print("bipolorized 4")
+
+        return bimg.flatten()
+
+    def calc_stateupdate_async(self, all_states, weights, max_epoch_count, check_interval=100, start_check_epoch=1000):
+        """Calculates the state updates asynchronously.
+        Parameters
+        ----------
+        all_states: State matrix of the network (e.g. set of binary images)
+        weights: weight matrix (calculated by function calc_weights)
+        max_epoch_count: counter for epochs
+        """
+        changed_bits = 0
+        epoch_count = 0
+        state_update_count = 0
+        new_s = np.copy(all_states)
+        # Buffer to keep track of the last few states
+        state_buffer = deque(maxlen=check_interval)
+
+        while epoch_count < max_epoch_count:
+            rand_ind = np.random.randint(len(all_states))  # pick a random pixel
+            epoch_count += 1
+            # print('the epoch count is:',epoch_count)
+            wi = weights[rand_ind, :]
+            new_value = self.get_sign(self.calc_dotproduct_async(all_states, wi))
+
+            if new_s[rand_ind] != new_value:
+                new_s[rand_ind] = new_value  # update one pixel in the image according to the state update rule
+                changed_bits += 1  # increase changed bits if the pixel was changed from the original input
+                # print('the state update count is', state_update_count)
+            state_buffer.append(np.copy(new_s))  # Add current state to buffer
+
+            if epoch_count >= start_check_epoch and (
+                    epoch_count - start_check_epoch) % check_interval == 0:  # check for convergence periodically
+                # print('CONVERGENCE TEST', 'in epoch', epoch_count)
+                if np.array_equal(new_s, state_buffer[0]):
+                    print('Converged after {} epochs'.format(epoch_count))
+                    print('state changes', changed_bits)
+                    break
+
+        return new_s, changed_bits, epoch_count
+
+    def calc_dotproduct(self, all_states, weights):
+        """Calculates dot product between two matrices, here the states and the weights of our network.
+        Parameters
+        ----------
+        all_states: State matrix of the network (e.g. set of binary images)
+        weights: weight matrix (calculated by function calc_weights)
+        """
+        z = np.dot(all_states.T, weights)
+        return z.T
+
+    def calc_dotproduct_async(self, states, weights_c):
+        """Calculates summed product between a weight vector (one column of the weight matrix), and one set of states.
+        Parameters
+        ----------
+        states: State matrix of the network (e.g. set of binary images)
+        weights_c: weight matrix (calculated by function calc_weights)
+        """
+        z_async = 0
+        for j in np.arange(0, len(weights_c)):
+            z_async = z_async + weights_c[j] * states[j]
+        return z_async
+
+    def get_sign(self, sum_sw):
+        """Returns -1 if the input is smaller than zero and 1 if the input is larger than zero.
+        Parameters
+        ----------
+        sum_sw: Integer/Float
+        """
+        theta = np.sign(sum_sw)
+        return theta
+
+    def calc_weights(self, all_states):
+        """Calculates the weights for the Hopfield Network using the states to train the network on.
+        All set of states to train the network on, are passed in at once.
+        Parameters
+        ----------
+        all_states: State matrix of the network (e.g. set of binary images)
+        """
+        w = np.dot(all_states, all_states.T)
+        np.fill_diagonal(w, 0)
+        return w
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
+    #Robot related
+
+    # Connect to the robot
+    session = qi.Session()
+    session.connect("tcp://" + constants['ip'] + ":" + str(constants['port']))
+    posture_service = session.service("ALRobotPosture")
+    posture_service.goToPosture("StandInit", 0.5)
+
     image_dir = 'patterns_uncovered'
     masked_image_dir ='masked' #'masked'
-    window = ImageSlideshow(image_dir, masked_image_dir)
+    train_dir = 'patterns_train'
+    mask_capture_dir = 'masked_captured'
+    window = ImageSlideshow(image_dir, masked_image_dir, train_dir, mask_capture_dir)
     window.show()
 
     sys.exit(app.exec())

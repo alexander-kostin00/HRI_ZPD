@@ -1,6 +1,9 @@
 # Hopfield Network
 
 import numpy as np
+from collections import deque
+
+
 
 
 def calc_dotproduct(all_states, weights):
@@ -72,44 +75,41 @@ def calc_stateupdate(all_states, weights):
     return new_s
 
 
-def calc_stateupdate_async(all_states, weights, max_state_changes, max_epoch_count):
+
+def calc_stateupdate_async(all_states, weights, max_epoch_count, check_interval=150, start_check_epoch=2000):
     """Calculates the state updates asynchronously.
     Parameters
     ----------
     all_states: State matrix of the network (e.g. set of binary images)
     weights: weight matrix (calculated by function calc_weights)
-    max_state_changes: counter for changed pixels
     max_epoch_count: counter for epochs
     """
     changed_bits = 0
     epoch_count = 0
-    state_change_counter = 0
+    state_update_count = 0
     new_s = np.copy(all_states)
-    s_orig = np.copy(all_states)
-    s_check = np.copy(all_states)
-    k = 1
-    print(len(all_states))
-    while state_change_counter < max_state_changes and epoch_count < max_epoch_count:
-        rand_ind = np.random.randint(len(all_states)) #pick a random pixel
+    # Buffer to keep track of the last few states
+    state_buffer = deque(maxlen=check_interval)
+
+
+    while epoch_count < max_epoch_count:
+        rand_ind = np.random.randint(len(all_states))  # pick a random pixel
         epoch_count += 1
+        #print('the epoch count is:',epoch_count)
         wi = weights[rand_ind, :]
-        new_s[rand_ind] = get_sign(calc_dotproduct_async(all_states, wi)) #update one pixel in the image according to the state update rule
-        if new_s[rand_ind] != s_orig[rand_ind]:
-            changed_bits += 1 # increase changed bits if the pixel was changed from the original input
-        state_change = False
-        for i in range(len(new_s)):
-            if new_s[i] != s_orig[i]: # check if any pixel changed in the  updated image compared to the orig img
-                state_change = True
+        new_value = get_sign(calc_dotproduct_async(all_states, wi))
+
+        if new_s[rand_ind] != new_value:
+            new_s[rand_ind] = new_value  # update one pixel in the image according to the state update rule
+            changed_bits += 1  # increase changed bits if the pixel was changed from the original input
+            #print('the state update count is', state_update_count)
+        state_buffer.append(np.copy(new_s))  # Add current state to buffer
+
+        if epoch_count >= start_check_epoch and (epoch_count - start_check_epoch) % check_interval == 0:  # check for convergence periodically
+            #print('CONVERGENCE TEST', 'in epoch', epoch_count)
+            if  np.array_equal(new_s, state_buffer[0]):
+                print('Converged after {} epochs'.format(epoch_count))
+                print('state changes', changed_bits)
                 break
-        if state_change:
-            state_change_counter += 1
-        else:
-            state_change_counter = 0
-        if epoch_count == len(all_states)/2*k:  # number is a magic number I am trying out how many runs over the amount of states with random state choice it needs
-            print('CONVERGENCE TEST', 'in epoch', epoch_count)
-            if np.array_equal(new_s, s_check):
-                print('converged after {} epocs'.format(epoch_count))
-                break
-            s_check = np.copy(new_s)
-            k += 1
-    return new_s, changed_bits, state_change_counter, epoch_count
+
+    return new_s, changed_bits, epoch_count

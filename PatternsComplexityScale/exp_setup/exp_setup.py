@@ -279,7 +279,7 @@ class ImageSlideshow(QWidget):
             # Extract the second integer from the last masked image filename
             last_masked_image_filename = os.path.basename(masked_image_path)
             numbers_in_filename = [int(s) for s in last_masked_image_filename.split('_') if s.isdigit()]
-
+            print(last_masked_image_filename, numbers_in_filename)
             if len(numbers_in_filename) >= 2:
                 correct_value = numbers_in_filename[1] // 2
                 if button_number == correct_value:

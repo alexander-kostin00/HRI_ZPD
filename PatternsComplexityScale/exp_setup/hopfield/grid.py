@@ -31,10 +31,6 @@ def bipolarize_pattern_robot(pattern_name):
     rimg = cv2.resize(gimg, constants.rsize)
     bimg = cv2.threshold(rimg, 125, 255, cv2.THRESH_BINARY)[1]
 
-    # uncomment the below lines to see the binary images
-    # cv2.imshow("bin robo", bimg)
-    # cv2.imshow("gray robot", gimg)
-    # cv2.imshow("grsize", rimg)
     cv2.waitKey(0)
    
     cv2.destroyAllWindows()
