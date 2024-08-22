@@ -224,8 +224,8 @@ class ImageSlideshow(QWidget):
         # Check the visibility limits
         if new_visibility_value <= constants['visibility_minimum']:
             self.display_message("YOU WON")
-        elif new_visibility_value >= constants['visibility_maximum']:
-            self.display_message("YOU LOST")
+        #elif new_visibility_value >= constants['visibility_maximum']:
+
         else:
             # Apply the mask with new visibility value
             thread = threading.Thread(target=self.apply_mask_and_show, args=(new_visibility_value,))

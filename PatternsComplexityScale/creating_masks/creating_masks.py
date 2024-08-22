@@ -74,7 +74,7 @@ class CreatingMasks:
                     if (j >= bound[0] and j <= bound[2]) and (i >= bound[1] and i <= bound[3]):
                         break
                 else:
-                    self.color_matrix[i, j] = green_color  # Fill with green color
+                    self.color_matrix[i, j] = random.choice([(255,255,255), (0,0,0)])
 
     def matrix_to_image(self, matrix, filename):
         image = Image.fromarray(matrix.astype('uint8'), 'RGB')
@@ -160,19 +160,19 @@ class MaskApp(QWidget):
         except Exception as e:
             QMessageBox.critical(self, 'Error', str(e))
 
+
+
 def generate_mask_file(input_path, visible, pieces, output_path):
     creating_masks = CreatingMasks(input_path, visible, pieces)
     creating_masks.create_visible_areas()
     creating_masks.cover_image()
     creating_masks.matrix_to_image(creating_masks.color_matrix, output_path)
 
-
 def main():
     app = QApplication(sys.argv)
     ex = MaskApp()
     ex.show()
     sys.exit(app.exec())
-
 
 
 if __name__ == '__main__':

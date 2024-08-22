@@ -27,7 +27,7 @@ import cv2
 import matplotlib.pyplot as plt
 from collections import deque
 import time
-
+import json
 
 
 def collect_mask(level, output_directory_path):
@@ -46,7 +46,14 @@ def collect_mask(level, output_directory_path):
 
         level_str = str(level)
 
-        subfolder_path = os.path.join(input_directory_path, level_str)
+        # choose a random image number
+
+        patter_no = random.randint(0, 4)
+        patter_no_str = str(patter_no)
+
+
+        pattern_path = os.path.join(input_directory_path, patter_no_str)
+        subfolder_path = os.path.join(pattern_path, level_str)
 
         print(subfolder_path)
 
@@ -75,6 +82,7 @@ def collect_mask(level, output_directory_path):
         shutil.copy(pattern_path, output_path)
 
         print(f'Mask generated and saved to {output_path}')
+
     except Exception as e:
         print('Error:', str(e))
 
@@ -90,7 +98,22 @@ class ImageSlideshow(QWidget):
         self.image_files = self.get_image_files()
         self.current_index = 0
         self.cleanup_done = False
+        self.button_press_number = 0
+        self.closing = False
 
+        # Initialize the save data later we might want to add more
+        self.summary_data = {
+            "iterations": []
+        }
+        self.current_iteration_data = {
+            "iteration_number": None,
+            "mask_shown": None,
+            "pattern_underlying": None,
+            "level": None,
+            "visibility": None,
+            "flipped_bits": None,
+            "pattern_identified": None
+        }
         self.initUI()
         self.start_slideshow()
 
@@ -159,16 +182,22 @@ class ImageSlideshow(QWidget):
         # Resize the window to match the screen size
         self.resize(self.screen_width, self.screen_height)
         print(self.current_index)
+
+        # Capture the patterns with the robot helper camera to train its Hopfield
         if self.current_index % 2 == 1: #only save the odd images as those are the patterns
-            filename_pattern = f'pattern_{self.current_index}.png'
+
+            pattern_no = str(self.current_index - 1)
+            filename_pattern = f'{pattern_no}.png'
             QTimer.singleShot(150, lambda: self.capture_and_save_image(filename_pattern, 'train')) #150 ms delay
 
     def show_next_image(self):
+        if self.closing:
+            return
         # Increment the index after showing the image
         self.current_index += 1
-        if self.current_index >= len(self.image_files):
-            self.show_masked_image()
-        else:
+        if len(self.image_files) + 1 > self.current_index >= len(self.image_files) and not self.closing:
+            self.show_masked_image() # only call once after the patterns have been called, the show_masked_image is self contained after this
+        elif self.current_index < len(self.image_files) and not self.closing:
             self.show_image()
             self.update_timer()
 
@@ -180,11 +209,15 @@ class ImageSlideshow(QWidget):
         self.timer.start(duration)
 
     def show_masked_image(self):
+        if self.closing:
+            return
         if not self.cleanup_done:
             self.cleanup_masked_image_dir()
             self.cleanup_done = True
 
         masked_image_path = self.get_last_masked_image() #getting the path, change to get the respective mask from a path
+        self.current_iteration_data["mask_shown"] = masked_image_path
+
         pixmap = QPixmap(masked_image_path)
 
         # Scale the pixmap to fit the screen size while maintaining the aspect ratio
@@ -201,7 +234,7 @@ class ImageSlideshow(QWidget):
 
         filename_mask = f'mask_{mask_files}.png'
 
-        QTimer.singleShot(5, lambda: self.capture_and_save_image(filename_mask, 'mask')) # Delay of 100 milliseconds
+        QTimer.singleShot(100, lambda: self.capture_and_save_image(filename_mask, 'mask')) # Delay of 100 milliseconds
 
         # Clear existing layout items except the label
         self.clear_layout(self.image_layout)
@@ -233,7 +266,7 @@ class ImageSlideshow(QWidget):
 
         # Additional processing after UI update
         # Optionally, delay further processing to ensure capture is complete
-        QTimer.singleShot(50, self.after_capture_processing)
+        QTimer.singleShot(250, self.after_capture_processing)
 
     def after_capture_processing(self):
         # Calculate cognitive load for the robot
@@ -242,8 +275,11 @@ class ImageSlideshow(QWidget):
         # Check most similar pattern
         pattern_choice = self.check_similarity(flattened_image)
 
-        # Stop the timer since we are done with the slideshow
-        self.timer.stop()
+
+        self.current_iteration_data['flipped_bits'] = flipped_bits
+        self.current_iteration_data['pattern_identified'] = pattern_choice
+
+
 
     def cleanup_masked_image_dir(self):
         if os.path.exists(self.masked_image_dir):
@@ -263,28 +299,38 @@ class ImageSlideshow(QWidget):
                 except Exception as e:
                     print(f'Error: {e}')
 
+
         collect_mask(constants['mask_level_initial'], self.masked_image_dir)
         print('Collected the initial mask')
 
     def handle_button(self, result):
+
+        self.summary_data["iterations"].append(self.current_iteration_data)
+        self.button_press_number += 1
+
+        self.current_iteration_data["iteration_number"] = self.button_press_number
+
         masked_image_path = self.get_last_masked_image()
-        # Extract the visibility value from the last masked image filename
+        # Extract the level value from the last masked image filename
         last_masked_image_dir = os.path.dirname(masked_image_path)
         print(last_masked_image_dir)
         last_masked_image_filename = os.path.basename(masked_image_path)
         level_value = int(last_masked_image_filename.split('_')[-1].replace('.png', ''))
+        self.current_iteration_data["level"] = level_value
 
 
             #(float(last_masked_image_filename.split('_')[-1].replace('.png', '')))
 
-        if result:
-            new_level_value = level_value - 1 # anna: made increase and decrease consistent
+        if not result and level_value > 1:
+            new_level_value = level_value - 1  # anna: made increase and decrease consistent
             print('New level value is ' + str(new_level_value))
-        else:
+        elif result and level_value < 17:
             new_level_value = level_value + 1
             print('New level value is ' + str(new_level_value))
+        else:
+            new_level_value = level_value
 
-        # Check the visibility limitsvisibility
+        # Check the visibility
 
         last_masked_image_filename = os.path.basename(masked_image_path)
 
@@ -293,10 +339,16 @@ class ImageSlideshow(QWidget):
         if match:
             visibility_value = float(match.group())
             print(f"The extracted floating-point value is: {visibility_value}")
+            self.current_iteration_data["visibility"] = visibility_value
+
             if visibility_value <= constants['visibility_minimum']:
                 self.display_message("YOU WON")
-            elif visibility_value >= constants['visibility_maximum']:
-                self.display_message("YOU LOST")
+
+                QTimer.singleShot(2000, self.display_completed_message)
+
+
+            #elif visibility_value >= constants['visibility_maximum']:
+                #self.display_message("YOU LOST")
             else:
                 #
                 print('Apply the mask with new visibility value')
@@ -305,6 +357,25 @@ class ImageSlideshow(QWidget):
         else:
             print("No floating-point number found in the file name.")
 
+    def display_completed_message(self):
+        # Display the second message
+        self.display_message("THE EXPERIMENT IS COMPLETED")
+
+        # Wait for another 2 seconds, then close the window
+        QTimer.singleShot(2000, self.save_data_and_close)
+
+    def save_data_and_close(self):
+        self.closing = True
+        # Save data to a JSON file
+        # converting int64 to int
+        self.summary_data = {k: int(v) if isinstance(v, np.int64) else v for k, v in self.summary_data.items()}
+
+        #with open("slideshow_summary.json", "w") as f:
+        #    json.dump(self.summary_data, f, indent=4)
+
+        # Now close the window
+        self.close()
+        QApplication.quit()
 
     def collect_mask_and_show(self, new_level_value):
         collect_mask(new_level_value, self.masked_image_dir)
@@ -357,7 +428,8 @@ class ImageSlideshow(QWidget):
             numbers_in_filename = [int(s) for s in last_masked_image_filename.split('_') if s.isdigit()]
             print(last_masked_image_filename, numbers_in_filename)
             if len(numbers_in_filename) >= 2:
-                correct_value = numbers_in_filename[1]
+                correct_value = numbers_in_filename[2] + 1
+                self.current_iteration_data["pattern_underlying"] = correct_value
                 if button_number == correct_value:
                     print("CORRECT")
                     self.display_feedback(True)
@@ -417,19 +489,23 @@ class ImageSlideshow(QWidget):
         # Convert the image to a PIL Image
         img = Image.fromarray(image)
 
-        # crop the image
-        # commented out for now, only relevant for actual game, then this needs to be calibrated before starting
-        # so that the pattern is cropped
-        # img_res = img.crop((constants['left'], constants['top'], constants['right'], constants['bottom'])
-        # when uncommenting below change to save cropped, maybe cropping needs to be done separately for train and masked as the position on screen is different
+
         if train_or_mask == 'train':
+            # crop the image
+            img_res = img.crop((constants['left_t'], constants['top_t'], constants['right_t'], constants['bottom_t']))
 
             # Save the image with to the trainimgs location
             filename_train = os.path.join(self.train_dir, filename)
-            img.save(filename_train)
+            print('trying to save to', filename_train)
+            img_res.save(filename_train)
+            print('training image saved to', filename_train)
         else:
+            # crop the image
+            img_res = img.crop((constants['left_m'], constants['top_m'], constants['right_m'], constants['bottom_m']))
+            # Save the image with to the maskimgs location
+
             filename_mask = os.path.join(self.mask_capture_dir, filename)
-            img.save(filename_mask)
+            img_res.save(filename_mask)
 
         #img_res.save(filename)
 
@@ -524,8 +600,8 @@ class ImageSlideshow(QWidget):
         k = 0
         for j in range(no_imgs):
             # image directory with image names as ordered ints
-            g = j + 1 +  k
-            filename_train = 'pattern_{}.png'.format(g)
+            g = j +  k
+            filename_train = '{}.png'.format(g)
             k += 1
             filepath_train = os.path.join(path, filename_train)
             print('The training image path is', filepath_train)
@@ -693,5 +769,6 @@ if __name__ == '__main__':
     mask_capture_dir = 'masked_captured'
     window = ImageSlideshow(image_dir, masked_image_dir, train_dir, mask_capture_dir)
     window.show()
+
 
     sys.exit(app.exec())

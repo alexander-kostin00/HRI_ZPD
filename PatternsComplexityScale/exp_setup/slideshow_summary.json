@@ -1,0 +1,10 @@
+{
+    "iterations": [
+        {
+            "iteration_number": 2,
+            "mask_shown": "masked/2_mask_38_visible_0.50_pattern_1_covered_8.png",
+            "pattern_underlying": 2,
+            "level": 8,
+            "visibility": 0.5,
+            "flipped_bits": 110,
+            "pattern_identified": 

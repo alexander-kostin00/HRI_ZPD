@@ -26,8 +26,8 @@ if __name__ == '__main__':
         '/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale/exp_setup/hopfield/images/Pattern_check/1.png'
     ] #'/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale/creating_patterns/patterns_murat/1.png', '/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale/exp_setup/hopfield/Patterns/Set14_wmasks/Set14/4.png'
 
-    visible_range = [0.2, 0.4] #[i / 25.0 for i in range(1, 21)]  # Generate 25 visible parameters from 0.04 to 0.8
-    num_masks_per_set = 10
+    visible_range = [0.1,0.15] #[i / 25.0 for i in range(1, 21)]  # Generate 20 visible parameters from 0.04 to 0.8
+    num_masks_per_set = 50
     num_pieces = 1  # Define the number of pieces;
 
     base_output_dir = '/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale/exp_setup/hopfield/images/Masks_check_new_set/'  # Define the base directory where masks will be saved

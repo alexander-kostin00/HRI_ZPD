@@ -3,15 +3,23 @@ constants = {
     'pattern_image_display_duration': 1000,  # milliseconds
     'number_image_display_duration': 2000,   # milliseconds
     'mask_visibility_initial': 0.4,
-    'mask_level_initial': 3,
+    'mask_level_initial': 7,
     'mask_pieces_min': 1,
     'mask_pieces_max': 1,
-    'decreasing_step': 0.1,    # value that is taken away from the visibility percentage
-    'increasing_step': 0.1,  # value that is added to the visibility percentage
-    'visibility_maximum': 0.8,   # upper limit
-    'visibility_minimum': 0.06,  # lower limit
+    'decreasing_step': 0.05,    # value that is taken away from the visibility percentage
+    'increasing_step': 0.05,  # value that is added to the visibility percentage
+    'visibility_maximum': 0.80,   # upper limit
+    'visibility_minimum': 0.5,  # lower limit
     'ip': '192.168.0.141', #Pepper 4: '192.168.0.141'
     'port': 9559,
-    'rsize': (30, 30), # size of images passed into Hopfield
+    'rsize': (32, 32), # size of images passed into Hopfield,
+    'left_t': 70, # training pattern cropping coordinates
+    'top_t': 55,
+    'right_t': 255,
+    'bottom_t': 240,
+    'left_m': 70,  # masked pattern cropping coordinates
+    'top_m': 55,
+    'right_m': 255,
+    'bottom_m': 240
 }
 

@@ -8,7 +8,7 @@ from audio import *
 
 #weights_h = calc_weights(train_imgs)
 #accuracies = np.zeros((constants.ntrainimgs, len(constants.probabilities)))
-set_path = '/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale/creating_patterns/patterns_anna/'
+set_path = '/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale/exp_setup/hopfield/images/Pattern_check/'
 #set_path = '/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale/creating_patterns/patterns_murat/'
 #set_path = '/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale/exp_setup/hopfield/images/Patterns/Set14_wmasks/Set14/' # 5 pattern images for training
 #set_path = '/home/anna/codebase/git_codebase/HRI_ZPD/PatternsComplexityScale/exp_setup/hopfield/images/Pattern_check/'
@@ -36,7 +36,7 @@ for mask_filename in os.listdir(check_directory):
 
     # Reshape the flattened array back to the original shape
     reconstructed_bimg = flattened_image.reshape(constants.rsize)
-    accuracies[n] = np.max[np.mean(compare_pattern == new_s), np.mean(compare_pattern == new_s_reversed)]
+    accuracies[n] = max(np.mean(compare_pattern == new_s), np.mean(compare_pattern == new_s_reversed))
     print(f"Accuracy for mask{n}, image 0: {accuracies[n]}")
     plt.imsave(filename, reconstructed_bimg, cmap='Greys')
     n += 1

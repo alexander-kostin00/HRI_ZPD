@@ -37,7 +37,13 @@ def collect_mask(level, output_directory_path):
 
         level_str = str(level)
 
-        subfolder_path = os.path.join(input_directory_path, level_str)
+        #choose a random image number
+
+        patter_no = random.randint(0, 4)
+        patter_no_str = str(patter_no)
+
+        pattern_path = os.path.join(input_directory_path, patter_no_str)
+        subfolder_path = os.path.join(pattern_path, level_str)
 
         print(subfolder_path)
 
@@ -230,12 +236,14 @@ class ImageSlideshow(QWidget):
 
             #(float(last_masked_image_filename.split('_')[-1].replace('.png', '')))
 
-        if result:
+        if not result and level_value > 1:
             new_level_value = level_value - 1 # anna: made increase and decrease consistent
             print('New level value is ' + str(new_level_value))
-        else:
+        elif result and level_value <= 17:
             new_level_value = level_value + 1
             print('New level value is ' + str(new_level_value))
+        else:
+            new_level_value = level_value
 
         # Check the visibility limitsvisibility
 
@@ -248,8 +256,8 @@ class ImageSlideshow(QWidget):
             print(f"The extracted floating-point value is: {visibility_value}")
             if visibility_value <= constants['visibility_minimum']:
                 self.display_message("YOU WON")
-            elif visibility_value >= constants['visibility_maximum']:
-                self.display_message("YOU LOST")
+            #elif visibility_value >= constants['visibility_maximum']:
+            #    self.display_message("YOU LOST")
             else:
                 #
                 print('Apply the mask with new visibility value')
@@ -310,7 +318,7 @@ class ImageSlideshow(QWidget):
             numbers_in_filename = [int(s) for s in last_masked_image_filename.split('_') if s.isdigit()]
             print(last_masked_image_filename, numbers_in_filename)
             if len(numbers_in_filename) >= 2:
-                correct_value = numbers_in_filename[1]
+                correct_value = numbers_in_filename[2]+1
                 if button_number == correct_value:
                     print("CORRECT")
                     self.display_feedback(True)
