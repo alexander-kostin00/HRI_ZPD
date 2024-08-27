@@ -20,6 +20,8 @@ import random
 import sys
 import os
 import re
+import numpy as np
+import json
 
 def collect_mask(level, output_directory_path):
 
@@ -85,6 +87,21 @@ class ImageSlideshow(QWidget):
         self.image_files = self.get_image_files()
         self.current_index = 0
         self.cleanup_done = False
+        self.button_press_number = 0
+        self.pattern_underlying = None
+
+
+        # Initialize the save data later we might want to add more
+        self.summary_data = {
+            "iterations": []
+        }
+        self.current_iteration_data = {
+            "iteration_number": None,
+            "mask_shown": None,
+            "pattern_underlying": None,
+            "level": None,
+            "visibility": None
+        }
 
         self.initUI()
         self.start_slideshow()
@@ -152,11 +169,12 @@ class ImageSlideshow(QWidget):
         self.resize(self.screen_width, self.screen_height)
 
     def show_next_image(self):
+
         # Increment the index after showing the image
         self.current_index += 1
-        if self.current_index >= len(self.image_files):
-            self.show_masked_image()
-        else:
+        if len(self.image_files) + 1 > self.current_index >= len(self.image_files):
+            self.show_masked_image()  # only call once after the patterns have been called, the show_masked_image is self contained after this
+        elif self.current_index < len(self.image_files):
             self.show_image()
             self.update_timer()
 
@@ -173,6 +191,8 @@ class ImageSlideshow(QWidget):
             self.cleanup_done = True
 
         masked_image_path = self.get_last_masked_image() #getting the path, change to get the respective mask from a path
+
+
         pixmap = QPixmap(masked_image_path)
 
         # Scale the pixmap to fit the screen size while maintaining the aspect ratio
@@ -226,15 +246,35 @@ class ImageSlideshow(QWidget):
         print('Collected the initial mask')
 
     def handle_button(self, result):
+
+
+
+        # add the previous iterations data to the summary data
+        self.summary_data["iterations"].append(self.current_iteration_data)
+
+
+        self.current_iteration_data = {
+            "iteration_number": None,
+            "mask_shown": None,
+            "pattern_underlying": None,
+            "level": None,
+            "visibility": None
+        }
+
+        self.current_iteration_data["pattern_underlying"] = self.pattern_underlying
+        #start the next iteration
+        self.button_press_number += 1
+        self.current_iteration_data["iteration_number"] = self.button_press_number
         masked_image_path = self.get_last_masked_image()
         # Extract the visibility value from the last masked image filename
         last_masked_image_dir = os.path.dirname(masked_image_path)
         print(last_masked_image_dir)
         last_masked_image_filename = os.path.basename(masked_image_path)
+        self.current_iteration_data["mask_shown"] = last_masked_image_filename
         level_value = int(last_masked_image_filename.split('_')[-1].replace('.png', ''))
+        self.current_iteration_data["level"] = level_value
 
-
-            #(float(last_masked_image_filename.split('_')[-1].replace('.png', '')))
+        #(float(last_masked_image_filename.split('_')[-1].replace('.png', '')))
 
         if not result and level_value > 1:
             new_level_value = level_value - 1 # anna: made increase and decrease consistent
@@ -254,8 +294,11 @@ class ImageSlideshow(QWidget):
         if match:
             visibility_value = float(match.group())
             print(f"The extracted floating-point value is: {visibility_value}")
-            if visibility_value <= constants['visibility_minimum']:
+            self.current_iteration_data["visibility"] = visibility_value
+            if visibility_value < constants['visibility_minimum']:
                 self.display_message("YOU WON")
+                QTimer.singleShot(2000, self.display_completed_message)
+
             #elif visibility_value >= constants['visibility_maximum']:
             #    self.display_message("YOU LOST")
             else:
@@ -266,6 +309,26 @@ class ImageSlideshow(QWidget):
         else:
             print("No floating-point number found in the file name.")
 
+    def display_completed_message(self):
+        # Display the second message
+        self.display_message("THE EXPERIMENT IS COMPLETED")
+
+        # Wait for another 2 seconds, then close the window
+        QTimer.singleShot(2000, self.save_data_and_close)
+
+    def save_data_and_close(self):
+        self.closing = True
+        # Save data to a JSON file
+        # converting int64 to int
+        self.summary_data["iterations"].append(self.current_iteration_data)
+        self.summary_data = {k: int(v) if isinstance(v, np.int64) else v for k, v in self.summary_data.items()}
+
+        with open("slideshow_summary.json", "w") as f:
+            json.dump(self.summary_data, f, indent=4)
+
+        # Now close the window
+        self.close()
+        QApplication.quit()
 
     def collect_mask_and_show(self, new_level_value):
         collect_mask(new_level_value, self.masked_image_dir)
@@ -319,6 +382,7 @@ class ImageSlideshow(QWidget):
             print(last_masked_image_filename, numbers_in_filename)
             if len(numbers_in_filename) >= 2:
                 correct_value = numbers_in_filename[2]+1
+                self.pattern_underlying = correct_value
                 if button_number == correct_value:
                     print("CORRECT")
                     self.display_feedback(True)

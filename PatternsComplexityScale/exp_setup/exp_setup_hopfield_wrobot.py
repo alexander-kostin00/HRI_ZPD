@@ -100,6 +100,9 @@ class ImageSlideshow(QWidget):
         self.cleanup_done = False
         self.button_press_number = 0
         self.closing = False
+        self.pattern_underlying = None
+        self.flipped_bits_save = None
+        self.pattern_identified = None
 
         # Initialize the save data later we might want to add more
         self.summary_data = {
@@ -216,7 +219,7 @@ class ImageSlideshow(QWidget):
             self.cleanup_done = True
 
         masked_image_path = self.get_last_masked_image() #getting the path, change to get the respective mask from a path
-        self.current_iteration_data["mask_shown"] = masked_image_path
+
 
         pixmap = QPixmap(masked_image_path)
 
@@ -276,8 +279,8 @@ class ImageSlideshow(QWidget):
         pattern_choice = self.check_similarity(flattened_image)
 
 
-        self.current_iteration_data['flipped_bits'] = flipped_bits
-        self.current_iteration_data['pattern_identified'] = pattern_choice
+        self.flipped_bits_save = int(flipped_bits)
+        self.pattern_identified = int(pattern_choice)
 
 
 
@@ -306,6 +309,22 @@ class ImageSlideshow(QWidget):
     def handle_button(self, result):
 
         self.summary_data["iterations"].append(self.current_iteration_data)
+
+        self.current_iteration_data = {
+            "iteration_number": None,
+            "mask_shown": None,
+            "pattern_underlying": None,
+            "level": None,
+            "visibility": None,
+            "flipped_bits": None,
+            "pattern_identified": None
+        }
+
+        self.current_iteration_data["pattern_underlying"] = self.pattern_underlying
+        self.current_iteration_data["flipped_bits"] = self.flipped_bits_save
+        self.current_iteration_data["pattern_identified"] = self.pattern_identified
+
+        #start the next iteration
         self.button_press_number += 1
 
         self.current_iteration_data["iteration_number"] = self.button_press_number
@@ -315,6 +334,7 @@ class ImageSlideshow(QWidget):
         last_masked_image_dir = os.path.dirname(masked_image_path)
         print(last_masked_image_dir)
         last_masked_image_filename = os.path.basename(masked_image_path)
+        self.current_iteration_data["mask_shown"] = last_masked_image_filename
         level_value = int(last_masked_image_filename.split('_')[-1].replace('.png', ''))
         self.current_iteration_data["level"] = level_value
 
@@ -341,7 +361,7 @@ class ImageSlideshow(QWidget):
             print(f"The extracted floating-point value is: {visibility_value}")
             self.current_iteration_data["visibility"] = visibility_value
 
-            if visibility_value <= constants['visibility_minimum']:
+            if visibility_value < constants['visibility_minimum']:
                 self.display_message("YOU WON")
 
                 QTimer.singleShot(2000, self.display_completed_message)
@@ -370,8 +390,8 @@ class ImageSlideshow(QWidget):
         # converting int64 to int
         self.summary_data = {k: int(v) if isinstance(v, np.int64) else v for k, v in self.summary_data.items()}
 
-        #with open("slideshow_summary.json", "w") as f:
-        #    json.dump(self.summary_data, f, indent=4)
+        with open("slideshow_summary.json", "w") as f:
+            json.dump(self.summary_data, f, indent=4)
 
         # Now close the window
         self.close()
@@ -429,7 +449,7 @@ class ImageSlideshow(QWidget):
             print(last_masked_image_filename, numbers_in_filename)
             if len(numbers_in_filename) >= 2:
                 correct_value = numbers_in_filename[2] + 1
-                self.current_iteration_data["pattern_underlying"] = correct_value
+                self.pattern_underlying = correct_value
                 if button_number == correct_value:
                     print("CORRECT")
                     self.display_feedback(True)

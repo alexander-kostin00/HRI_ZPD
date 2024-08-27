@@ -1,10 +1,85 @@
 {
     "iterations": [
         {
+            "iteration_number": null,
+            "mask_shown": null,
+            "pattern_underlying": null,
+            "level": null,
+            "visibility": null,
+            "flipped_bits": null,
+            "pattern_identified": null
+        },
+        {
+            "iteration_number": 1,
+            "mask_shown": "1_mask_26_visible_0.55_pattern_3_covered_7.png",
+            "pattern_underlying": 4,
+            "level": 7,
+            "visibility": 0.55,
+            "flipped_bits": 193,
+            "pattern_identified": 3
+        },
+        {
             "iteration_number": 2,
-            "mask_shown": "masked/2_mask_38_visible_0.50_pattern_1_covered_8.png",
+            "mask_shown": "2_mask_1_visible_0.60_pattern_1_covered_6.png",
             "pattern_underlying": 2,
+            "level": 6,
+            "visibility": 0.6,
+            "flipped_bits": 162,
+            "pattern_identified": 4
+        },
+        {
+            "iteration_number": 3,
+            "mask_shown": "3_mask_16_visible_0.70_pattern_2_covered_5.png",
+            "pattern_underlying": 3,
+            "level": 5,
+            "visibility": 0.7,
+            "flipped_bits": 105,
+            "pattern_identified": 2
+        },
+        {
+            "iteration_number": 4,
+            "mask_shown": "4_mask_40_visible_0.70_pattern_0_covered_4.png",
+            "pattern_underlying": 1,
+            "level": 4,
+            "visibility": 0.7,
+            "flipped_bits": 166,
+            "pattern_identified": 1
+        },
+        {
+            "iteration_number": 5,
+            "mask_shown": "5_mask_8_visible_0.70_pattern_2_covered_5.png",
+            "pattern_underlying": 3,
+            "level": 5,
+            "visibility": 0.7,
+            "flipped_bits": 171,
+            "pattern_identified": 2
+        },
+        {
+            "iteration_number": 6,
+            "mask_shown": "6_mask_20_visible_0.60_pattern_0_covered_6.png",
+            "pattern_underlying": 1,
+            "level": 6,
+            "visibility": 0.6,
+            "flipped_bits": 203,
+            "pattern_identified": 5
+        },
+        {
+            "iteration_number": 7,
+            "mask_shown": "7_mask_32_visible_0.55_pattern_0_covered_7.png",
+            "pattern_underlying": 1,
+            "level": 7,
+            "visibility": 0.55,
+            "flipped_bits": 209,
+            "pattern_identified": 1
+        },
+        {
+            "iteration_number": 8,
+            "mask_shown": "8_mask_11_visible_0.60_pattern_0_covered_8.png",
+            "pattern_underlying": 1,
             "level": 8,
-            "visibility": 0.5,
-            "flipped_bits": 110,
-            "pattern_identified": 
+            "visibility": 0.6,
+            "flipped_bits": 176,
+            "pattern_identified": 1
+        }
+    ]
+}

@@ -13,13 +13,13 @@ constants = {
     'ip': '192.168.0.141', #Pepper 4: '192.168.0.141'
     'port': 9559,
     'rsize': (32, 32), # size of images passed into Hopfield,
-    'left_t': 70, # training pattern cropping coordinates
-    'top_t': 55,
-    'right_t': 255,
-    'bottom_t': 240,
-    'left_m': 70,  # masked pattern cropping coordinates
-    'top_m': 55,
-    'right_m': 255,
-    'bottom_m': 240
+    'left_t': 175, # training pattern cropping coordinates
+    'top_t': 138,
+    'right_t': 247,
+    'bottom_t': 210,
+    'left_m': 150,  # masked pattern cropping coordinates
+    'top_m': 147,
+    'right_m': 213,
+    'bottom_m': 207
 }
 
