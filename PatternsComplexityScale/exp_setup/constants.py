@@ -9,17 +9,17 @@ constants = {
     'decreasing_step': 0.05,    # value that is taken away from the visibility percentage
     'increasing_step': 0.05,  # value that is added to the visibility percentage
     'visibility_maximum': 0.80,   # upper limit
-    'visibility_minimum': 0.5,  # lower limit
+    'visibility_minimum': 0.10,  # lower limit
     'ip': '192.168.0.141', #Pepper 4: '192.168.0.141'
     'port': 9559,
     'rsize': (32, 32), # size of images passed into Hopfield,
-    'left_t': 175, # training pattern cropping coordinates
-    'top_t': 138,
-    'right_t': 247,
-    'bottom_t': 210,
-    'left_m': 150,  # masked pattern cropping coordinates
-    'top_m': 147,
-    'right_m': 213,
-    'bottom_m': 207
+    'left_t': 154, # training pattern cropping coordinates
+    'top_t': 159,
+    'right_t': 217,
+    'bottom_t': 220,
+    'left_m': 154,  # masked pattern cropping coordinates
+    'top_m': 159,
+    'right_m': 217,
+    'bottom_m': 220
 }
 

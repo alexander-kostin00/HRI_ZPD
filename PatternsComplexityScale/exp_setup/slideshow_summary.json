@@ -7,79 +7,198 @@
             "level": null,
             "visibility": null,
             "flipped_bits": null,
+            "accuracy": null,
             "pattern_identified": null
         },
         {
             "iteration_number": 1,
-            "mask_shown": "1_mask_26_visible_0.55_pattern_3_covered_7.png",
-            "pattern_underlying": 4,
+            "mask_shown": "1_mask_31_visible_0.55_pattern_0_covered_7.png",
+            "pattern_underlying": 1,
             "level": 7,
             "visibility": 0.55,
-            "flipped_bits": 193,
-            "pattern_identified": 3
+            "flipped_bits": 165,
+            "pattern_identified": 1,
+            "accuracy": 0.7880859375
         },
         {
             "iteration_number": 2,
-            "mask_shown": "2_mask_1_visible_0.60_pattern_1_covered_6.png",
-            "pattern_underlying": 2,
-            "level": 6,
-            "visibility": 0.6,
-            "flipped_bits": 162,
-            "pattern_identified": 4
+            "mask_shown": "2_mask_28_visible_0.55_pattern_0_covered_8.png",
+            "pattern_underlying": 1,
+            "level": 8,
+            "visibility": 0.55,
+            "flipped_bits": 146,
+            "pattern_identified": 1,
+            "accuracy": 0.873046875
         },
         {
             "iteration_number": 3,
-            "mask_shown": "3_mask_16_visible_0.70_pattern_2_covered_5.png",
-            "pattern_underlying": 3,
-            "level": 5,
-            "visibility": 0.7,
-            "flipped_bits": 105,
-            "pattern_identified": 2
+            "mask_shown": "3_mask_37_visible_0.50_pattern_1_covered_9.png",
+            "pattern_underlying": 2,
+            "level": 9,
+            "visibility": 0.5,
+            "flipped_bits": 217,
+            "pattern_identified": 2,
+            "accuracy": 0.8251953125
         },
         {
             "iteration_number": 4,
-            "mask_shown": "4_mask_40_visible_0.70_pattern_0_covered_4.png",
+            "mask_shown": "4_mask_42_visible_0.45_pattern_0_covered_10.png",
             "pattern_underlying": 1,
-            "level": 4,
-            "visibility": 0.7,
-            "flipped_bits": 166,
-            "pattern_identified": 1
+            "level": 10,
+            "visibility": 0.45,
+            "flipped_bits": 172,
+            "pattern_identified": 1,
+            "accuracy": 0.783203125
         },
         {
             "iteration_number": 5,
-            "mask_shown": "5_mask_8_visible_0.70_pattern_2_covered_5.png",
-            "pattern_underlying": 3,
-            "level": 5,
-            "visibility": 0.7,
-            "flipped_bits": 171,
-            "pattern_identified": 2
+            "mask_shown": "5_mask_5_visible_0.40_pattern_4_covered_11.png",
+            "pattern_underlying": 5,
+            "level": 11,
+            "visibility": 0.4,
+            "flipped_bits": 186,
+            "pattern_identified": 5,
+            "accuracy": 0.873046875
         },
         {
             "iteration_number": 6,
-            "mask_shown": "6_mask_20_visible_0.60_pattern_0_covered_6.png",
-            "pattern_underlying": 1,
-            "level": 6,
-            "visibility": 0.6,
-            "flipped_bits": 203,
-            "pattern_identified": 5
+            "mask_shown": "6_mask_26_visible_0.35_pattern_2_covered_12.png",
+            "pattern_underlying": 3,
+            "level": 12,
+            "visibility": 0.35,
+            "flipped_bits": 261,
+            "pattern_identified": 3,
+            "accuracy": 0.8056640625
         },
         {
             "iteration_number": 7,
-            "mask_shown": "7_mask_32_visible_0.55_pattern_0_covered_7.png",
-            "pattern_underlying": 1,
-            "level": 7,
-            "visibility": 0.55,
-            "flipped_bits": 209,
-            "pattern_identified": 1
+            "mask_shown": "7_mask_14_visible_0.35_pattern_1_covered_13.png",
+            "pattern_underlying": 2,
+            "level": 13,
+            "visibility": 0.35,
+            "flipped_bits": 253,
+            "pattern_identified": 5,
+            "accuracy": 0.72265625
         },
         {
             "iteration_number": 8,
-            "mask_shown": "8_mask_11_visible_0.60_pattern_0_covered_8.png",
+            "mask_shown": "8_mask_20_visible_0.25_pattern_0_covered_14.png",
             "pattern_underlying": 1,
-            "level": 8,
-            "visibility": 0.6,
-            "flipped_bits": 176,
-            "pattern_identified": 1
+            "level": 14,
+            "visibility": 0.25,
+            "flipped_bits": 187,
+            "pattern_identified": 1,
+            "accuracy": 0.763671875
+        },
+        {
+            "iteration_number": 9,
+            "mask_shown": "9_mask_45_visible_0.20_pattern_3_covered_15.png",
+            "pattern_underlying": 4,
+            "level": 15,
+            "visibility": 0.2,
+            "flipped_bits": 232,
+            "pattern_identified": 5,
+            "accuracy": 0.79296875
+        },
+        {
+            "iteration_number": 10,
+            "mask_shown": "10_mask_31_visible_0.15_pattern_2_covered_16.png",
+            "pattern_underlying": 3,
+            "level": 16,
+            "visibility": 0.15,
+            "flipped_bits": 324,
+            "pattern_identified": 1,
+            "accuracy": 0.5380859375
+        },
+        {
+            "iteration_number": 11,
+            "mask_shown": "11_mask_47_visible_0.15_pattern_3_covered_15.png",
+            "pattern_underlying": 4,
+            "level": 15,
+            "visibility": 0.15,
+            "flipped_bits": 234,
+            "pattern_identified": 1,
+            "accuracy": 0.712890625
+        },
+        {
+            "iteration_number": 12,
+            "mask_shown": "12_mask_21_visible_0.25_pattern_3_covered_14.png",
+            "pattern_underlying": 4,
+            "level": 14,
+            "visibility": 0.25,
+            "flipped_bits": 286,
+            "pattern_identified": 4,
+            "accuracy": 0.8037109375
+        },
+        {
+            "iteration_number": 13,
+            "mask_shown": "13_mask_9_visible_0.20_pattern_2_covered_15.png",
+            "pattern_underlying": 3,
+            "level": 15,
+            "visibility": 0.2,
+            "flipped_bits": 260,
+            "pattern_identified": 1,
+            "accuracy": 0.755859375
+        },
+        {
+            "iteration_number": 14,
+            "mask_shown": "14_mask_9_visible_0.15_pattern_2_covered_16.png",
+            "pattern_underlying": 3,
+            "level": 16,
+            "visibility": 0.15,
+            "flipped_bits": 263,
+            "pattern_identified": 5,
+            "accuracy": 0.72265625
+        },
+        {
+            "iteration_number": 15,
+            "mask_shown": "15_mask_8_visible_0.10_pattern_0_covered_17.png",
+            "pattern_underlying": 1,
+            "level": 17,
+            "visibility": 0.1,
+            "flipped_bits": 223,
+            "pattern_identified": 5,
+            "accuracy": 0.7216796875
+        },
+        {
+            "iteration_number": 16,
+            "mask_shown": "16_mask_32_visible_0.15_pattern_0_covered_16.png",
+            "pattern_underlying": 1,
+            "level": 16,
+            "visibility": 0.15,
+            "flipped_bits": 200,
+            "pattern_identified": 1,
+            "accuracy": 0.7724609375
+        },
+        {
+            "iteration_number": 17,
+            "mask_shown": "17_mask_3_visible_0.10_pattern_3_covered_17.png",
+            "pattern_underlying": 4,
+            "level": 17,
+            "visibility": 0.1,
+            "flipped_bits": 211,
+            "pattern_identified": 1,
+            "accuracy": 0.6982421875
+        },
+        {
+            "iteration_number": 18,
+            "mask_shown": "18_mask_36_visible_0.20_pattern_2_covered_16.png",
+            "pattern_underlying": 3,
+            "level": 16,
+            "visibility": 0.2,
+            "flipped_bits": 287,
+            "pattern_identified": 5,
+            "accuracy": 0.81640625
+        },
+        {
+            "iteration_number": 19,
+            "mask_shown": "19_mask_31_visible_0.15_pattern_1_covered_17.png",
+            "pattern_underlying": 2,
+            "level": 17,
+            "visibility": 0.15,
+            "flipped_bits": 238,
+            "pattern_identified": 5,
+            "accuracy": 0.705078125
         }
     ]
 }
