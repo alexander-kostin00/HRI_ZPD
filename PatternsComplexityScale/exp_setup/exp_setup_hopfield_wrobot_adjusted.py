@@ -387,7 +387,7 @@ class ImageSlideshow(QWidget):
 
             if visibility_value <= constants['visibility_minimum'] and result:
                 self.display_message("YOU WON")
-
+                self.summary_data["iterations"].append(self.current_iteration_data)
                 QTimer.singleShot(2000, self.display_completed_message)
 
 

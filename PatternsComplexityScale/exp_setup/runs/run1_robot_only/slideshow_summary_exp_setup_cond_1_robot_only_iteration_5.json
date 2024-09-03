@@ -1,0 +1,147 @@
+{
+    "iterations": [
+        {
+            "iteration_number": null,
+            "mask_shown": null,
+            "pattern_underlying": null,
+            "level": null,
+            "visibility": null,
+            "flipped_bits": null,
+            "accuracy": null,
+            "pattern_identified": null,
+            "human_button": null
+        },
+        {
+            "iteration_number": 1,
+            "mask_shown": "1_image_8_covered_0.4.png",
+            "pattern_underlying": 4,
+            "level": null,
+            "visibility": 0.4,
+            "flipped_bits": 193,
+            "pattern_identified": 4,
+            "accuracy": 0.83203125,
+            "human_button": 4
+        },
+        {
+            "iteration_number": 2,
+            "mask_shown": "2_image_2_covered_0.15.png",
+            "pattern_underlying": 1,
+            "level": null,
+            "visibility": 0.15,
+            "flipped_bits": 228,
+            "pattern_identified": 1,
+            "accuracy": 0.7939453125,
+            "human_button": 1
+        },
+        {
+            "iteration_number": 3,
+            "mask_shown": "3_image_6_covered_0.5.png",
+            "pattern_underlying": 3,
+            "level": null,
+            "visibility": 0.5,
+            "flipped_bits": 157,
+            "pattern_identified": 3,
+            "accuracy": 0.8974609375,
+            "human_button": 3
+        },
+        {
+            "iteration_number": 4,
+            "mask_shown": "4_image_10_covered_0.25.png",
+            "pattern_underlying": 5,
+            "level": null,
+            "visibility": 0.25,
+            "flipped_bits": 192,
+            "pattern_identified": 5,
+            "accuracy": 0.859375,
+            "human_button": 5
+        },
+        {
+            "iteration_number": 5,
+            "mask_shown": "5_image_6_covered_0.65.png",
+            "pattern_underlying": 3,
+            "level": null,
+            "visibility": 0.65,
+            "flipped_bits": 112,
+            "pattern_identified": 3,
+            "accuracy": 0.93359375,
+            "human_button": 3
+        },
+        {
+            "iteration_number": 6,
+            "mask_shown": "6_image_10_covered_0.6.png",
+            "pattern_underlying": 5,
+            "level": null,
+            "visibility": 0.6,
+            "flipped_bits": 98,
+            "pattern_identified": 5,
+            "accuracy": 0.9091796875,
+            "human_button": 5
+        },
+        {
+            "iteration_number": 7,
+            "mask_shown": "7_image_4_covered_0.55.png",
+            "pattern_underlying": 2,
+            "level": null,
+            "visibility": 0.55,
+            "flipped_bits": 155,
+            "pattern_identified": 2,
+            "accuracy": 0.87890625,
+            "human_button": 2
+        },
+        {
+            "iteration_number": 8,
+            "mask_shown": "8_image_10_covered_0.15.png",
+            "pattern_underlying": 5,
+            "level": null,
+            "visibility": 0.15,
+            "flipped_bits": 203,
+            "pattern_identified": 5,
+            "accuracy": 0.837890625,
+            "human_button": 5
+        },
+        {
+            "iteration_number": 9,
+            "mask_shown": "9_image_8_covered_0.45.png",
+            "pattern_underlying": 4,
+            "level": null,
+            "visibility": 0.45,
+            "flipped_bits": 187,
+            "pattern_identified": 4,
+            "accuracy": 0.8447265625,
+            "human_button": 4
+        },
+        {
+            "iteration_number": 10,
+            "mask_shown": "10_image_4_covered_0.45.png",
+            "pattern_underlying": 2,
+            "level": null,
+            "visibility": 0.45,
+            "flipped_bits": 191,
+            "pattern_identified": 2,
+            "accuracy": 0.8125,
+            "human_button": 2
+        },
+        {
+            "iteration_number": 11,
+            "mask_shown": "11_image_4_covered_0.4.png",
+            "pattern_underlying": 2,
+            "level": null,
+            "visibility": 0.4,
+            "flipped_bits": 208,
+            "pattern_identified": 2,
+            "accuracy": 0.814453125,
+            "human_button": 2
+        },
+        {
+            "iteration_number": 12,
+            "mask_shown": "12_image_2_covered_0.1.png",
+            "pattern_underlying": 1,
+            "level": null,
+            "visibility": 0.1,
+            "flipped_bits": 255,
+            "pattern_identified": 1,
+            "accuracy": 0.7783203125,
+            "human_button": 1
+        }
+    ]
+}

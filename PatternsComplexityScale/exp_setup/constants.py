@@ -10,6 +10,7 @@ constants = {
     'increasing_step': 0.05,  # value that is added to the visibility percentage
     'visibility_maximum': 0.80,   # upper limit
     'visibility_minimum': 0.10,  # lower limit
+    'game_duration': 1200000, #in ms
     'ip': '192.168.0.141', #Pepper 4: '192.168.0.141'
     'port': 9559,
     'rsize': (32, 32), # size of images passed into Hopfield,
